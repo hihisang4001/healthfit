@@ -249,3 +249,5 @@ body[data-view=result] .blocks.short{grid-template-columns:1fr;grid-auto-rows:1f
 @media (orientation:landscape){body[data-view=result] .blocks.short{grid-template-columns:1fr 1fr;grid-auto-rows:auto;flex:0 0 26%}}
 body[data-view=result] .blocks.short button.danger{background:#FDECEC;color:var(--bad);border:3px solid #F2B8B8;box-shadow:none}
 body[data-view=result] .blocks.short button[hidden]{display:none}
+body[data-view=result] .blocks.short #undo{font-size:clamp(24px,5.5vmin,64px);padding:8px;margin:0;border-radius:22px;min-height:0}
+@media (orientation:portrait){body[data-view=result] .blocks.short #undo{font-size:clamp(26px,7vmin,70px)}}
