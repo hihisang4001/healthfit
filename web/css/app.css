@@ -209,3 +209,5 @@ body[data-view=loading] section[data-view=loading]{flex:1;display:flex;flex-dire
   @keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2.5vmin) scale(1.04)}}
   @keyframes blink{0%,100%{opacity:.15}40%{opacity:1}}
 }
+
+.ver{font-size:14px;text-align:center;margin:4px 0}
