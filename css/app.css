@@ -48,7 +48,7 @@ th{position:sticky;top:0;background:var(--card);word-break:keep-all;font-size:16
 
 /* QR 인식 뒤 화면(홈·항목 고르기·결과): 선택 블록이 여백 없이 화면을 가득 채우고, 글씨도 화면 크기에 맞춰 커진다 */
 :root{--top:64px}
-body[data-view=home] main,body[data-view=record] main,body[data-view=result] main{max-width:none;height:calc(100dvh - var(--top));padding:8px;display:flex;flex-direction:column}
+body[data-view=home] main,body[data-view=record] main,body[data-view=result] main{max-width:none;height:calc(100dvh - var(--top) - 26px);padding:8px;display:flex;flex-direction:column}
 body[data-view=home] section[data-view=home],body[data-view=record] section[data-view=record],body[data-view=result] section[data-view=result]{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
 body[data-view=home] h1,body[data-view=record] h2{font-size:clamp(24px,5vmin,48px);margin:0}
 body[data-view=home] .row button,body[data-view=record] .row button{min-height:0;padding:10px 20px;font-size:clamp(18px,3.4vmin,30px)}
@@ -186,3 +186,31 @@ body[data-view=record] #form .pad button.del{font-size:clamp(24px,5.6vmin,60px)}
 .dlg-btns button{min-height:0;padding:3.2vmin 8px;border-radius:20px;font-size:clamp(28px,6.4vmin,64px);font-family:var(--display);font-weight:400}
 .dlg-btns button.primary{box-shadow:0 5px 0 var(--track-deep);font-size:clamp(28px,6.4vmin,64px);min-height:0}
 @media (orientation:portrait){.dlg-btns{grid-template-columns:1fr}.dlg-btns #confirm-yes{order:-1}}
+
+/* 교사 화면: 그래프·배너·반응형 */
+.banner{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#FFF4D6;border-color:#E8C25A}
+.charts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.charts .card{margin:0}.chart .spark{width:100%;height:auto;display:block;margin:6px 0}
+.chart .badge.sm{width:34px;height:34px}
+body:not([data-view=login]):not([data-view=record]) #app [data-view=dash],body:not([data-view=login]) #app [data-view=student]{max-width:1100px;margin-inline:auto}
+@media (max-width:700px){#app [data-view=dash] table{font-size:.95rem}.charts{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.charts{grid-template-columns:1fr}}
+
+/* 로딩(전환) 화면: QR을 읽은 뒤 학생 정보가 올 때까지 */
+body[data-view=loading] main{max-width:none;height:calc(100dvh - var(--top) - 26px);padding:8px;display:flex;flex-direction:column}
+body[data-view=loading] section[data-view=loading]{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vmin;text-align:center}
+.load-img{width:min(46vmin,340px);height:auto;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 58%,transparent 74%);mask-image:radial-gradient(circle at 50% 50%,#000 58%,transparent 74%)}
+.load-text{font-family:var(--display);font-size:clamp(28px,6vmin,56px);margin:0;color:var(--track)}
+.load-sub{font-size:clamp(18px,3.4vmin,30px);margin:0}
+.dots i{font-style:normal}
+@media (prefers-reduced-motion:no-preference){
+  .load-img{animation:bob 1.1s ease-in-out infinite}
+  .dots i{animation:blink 1.2s infinite both}.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+  @keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2.5vmin) scale(1.04)}}
+  @keyframes blink{0%,100%{opacity:.15}40%{opacity:1}}
+}
+
+
+/* 모든 화면 맨 아래에 회색 글씨로 버전 표시 */
+.ver-foot{position:fixed;left:0;right:0;bottom:0;height:24px;line-height:24px;text-align:center;font-size:13px;color:#9AA39D;pointer-events:none;z-index:1}
+main{padding-bottom:30px}

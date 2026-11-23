@@ -25,7 +25,7 @@ async function login(id) {
   me = { id: normalize(id), name: '', grade: 0, sex: '', records: [], loading: true };
   $('hello').textContent = '불러오는 중…';
   $('go-record').disabled = $('go-mine').disabled = true;
-  view('home');
+  view('loading');
   try { scanner && scanner.pause && scanner.pause(true); } catch (e) {}
   try {
     const d = await api.studentMe(id);
@@ -33,6 +33,7 @@ async function login(id) {
     Object.assign(me, { name: d.name, grade: d.grade, sex: d.sex, records: d.records, peers: d.peers || {}, loading: false });
     $('hello').textContent = `${me.name} (${me.grade}학년)`;
     $('go-record').disabled = $('go-mine').disabled = false;
+    view('home');
   } catch (e) {
     me = null; $('scan-error').textContent = e.message; view('scan'); resumeScanner();
   }
@@ -209,6 +210,12 @@ $('again').addEventListener('click', () => { renderItems(); view('record'); });
 $('logout').addEventListener('click', logout);
 root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { if (b.closest('[data-view=record]') && !$('form').hidden) renderItems(); else view('home'); }));
 
+// 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
+const BUILD = '1';
+$('ver').textContent = 'v' + BUILD;
+fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
+  if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
+}).catch(() => {});
 const tableReady = loadTable();
 const devId = DEV && new URLSearchParams(location.search).get('id');
 if (devId) { await tableReady; login(devId); } else startScanner();

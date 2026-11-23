@@ -2,6 +2,7 @@ import { api } from './api.js';
 import { ITEMS } from './config.js';
 import { TIERS, tierFor, latestBest, gradeKey } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
+import { bestOfDay } from './tiers.js';
 
 const root = document.getElementById('app');
 const $ = (id) => document.getElementById(id);
@@ -46,7 +47,33 @@ function openStudent(s) {
   $('a-date').value = today(); $('a-value').value = '';
   renderStudent(); show(root, 'student');
 }
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svg(tag, attrs = {}, ...kids) { const n = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); n.append(...kids); return n; }
+function chart(it, pts) {
+  const W = 220, H = 90, P = 10, lower = it.key === 'run50';
+  const vals = pts.map((p) => p.value), lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const x = (i) => (pts.length === 1 ? W / 2 : P + (i * (W - 2 * P)) / (pts.length - 1));
+  const y = (v) => { const f = (v - lo) / span; return P + (lower ? f : 1 - f) * (H - 2 * P); };
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join('');
+  const g = svg('svg', { viewBox: `0 0 ${W} ${H}`, class: 'spark', role: 'img', 'aria-label': `${it.label} 변화` });
+  if (pts.length > 1) g.append(svg('path', { d: line, fill: 'none', stroke: 'var(--turf)', 'stroke-width': 3, 'stroke-linejoin': 'round' }));
+  pts.forEach((p, i) => g.append(svg('circle', { cx: x(i), cy: y(p.value), r: 4.5, fill: 'var(--turf)' }, svg('title', {}, `${p.date} ${fmt(it.key, p.value)}${it.unit}`))));
+  return g;
+}
+function renderCharts() {
+  const box = $('charts'); box.replaceChildren();
+  const mine = records.filter((r) => r.id === current.id), key = gradeKey(current.grade, current.sex);
+  for (const it of ITEMS) {
+    const pts = bestOfDay(mine.filter((r) => r.item === it.key)).sort((a, b) => a.date.localeCompare(b.date));
+    const last = pts[pts.length - 1], tier = last && key ? tierFor(it.key, key, last.value) : null;
+    box.append(el('div', { class: 'card chart' },
+      el('div', { class: 'row' }, el('b', { class: 'grow' }, it.label), tier ? badge(tier.index, true) : ''),
+      pts.length ? chart(it, pts) : el('p', { class: 'muted' }, '기록 없음'),
+      el('div', { class: 'muted' }, last ? `${pts.length}회 · 최근 ${fmt(it.key, last.value)}${it.unit} (${last.date.slice(5)})` : '')));
+  }
+}
 function renderStudent() {
+  renderCharts();
   const t = $('s-table'); t.replaceChildren();
   t.append(el('tr', {}, ...['날짜', '항목', '기록', '입력자', '등급', ''].map((h) => el('th', {}, h))));
   const mine = records.filter((r) => r.id === current.id).sort((a, b) => b.date.localeCompare(a.date));
@@ -78,7 +105,22 @@ $('add').addEventListener('submit', (ev) => { ev.preventDefault(); run(() => api
 ['f-grade', 'f-sex', 'f-item'].forEach((id) => $(id).addEventListener('change', renderDash));
 $('reload').addEventListener('click', async () => { try { await load(); renderDash(); } catch (e) { $('dash-error').textContent = e.message; } });
 $('logout').addEventListener('click', () => { pin = ''; roster = []; records = []; show(root, 'login'); });
+$('promote').addEventListener('click', async () => {
+  const b = $('promote');
+  if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = '정말 올리기 (되돌릴 수 없어요)'; setTimeout(() => { b.dataset.armed = ''; b.textContent = '학년 올리기'; }, 6000); return; }
+  b.dataset.armed = ''; b.textContent = '학년 올리기';
+  try { const r = await api.teacherPromote(pin); await load(); renderDash(); $('dash-error').textContent = ''; $('dash-note').textContent = `진급 ${r.promoted}명, 졸업 ${r.graduated}명 처리했어요.`; }
+  catch (e) { $('dash-error').textContent = e.message; }
+});
+function bannerCheck() {
+  const m = new Date().getMonth() + 1, k = 'backup-' + new Date().getFullYear() + '-' + (m >= 12 || m <= 1 ? 'w' : m === 7 ? 's' : '');
+  let seen = false; try { seen = !!localStorage.getItem(k); } catch (e) {}
+  $('backup-banner').hidden = !(k.endsWith('w') || k.endsWith('s')) || seen;
+  $('banner-close').onclick = () => { try { localStorage.setItem(k, '1'); } catch (e) {} $('backup-banner').hidden = true; };
+}
+bannerCheck();
 $('s-back').addEventListener('click', () => { renderDash(); show(root, 'dash'); });
 
 for (const sel of [$('f-item'), $('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, it.label));
+$('ver').textContent = 'v1';
 await loadTable();

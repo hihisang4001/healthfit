@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#C4432B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=202611231648">
+<link rel="stylesheet" href="css/app.css?v=1">
 </head>
 <body>
 <header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="index.html">학생용</a></header>
@@ -24,6 +24,7 @@
 
   <section data-view="dash" hidden>
     <div class="row"><h1 class="grow">전체 현황</h1><button class="ghost" id="reload">새로 고침</button><button class="ghost" id="logout">나가기</button></div>
+    <div class="card banner" id="backup-banner" hidden><span>학기가 끝났어요. 구글 시트를 <b>사본 만들기</b>로 한 번 저장해 두세요.</span><button class="ghost" id="banner-close">확인했어요</button></div>
     <div class="card row">
       <label class="grow">학년<select id="f-grade"><option value="">전체</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
       <label class="grow">성별<select id="f-sex"><option value="">전체</option><option>남</option><option>여</option></select></label>
@@ -31,6 +32,8 @@
     </div>
     <div class="card"><h2>등급 분포</h2><div class="bars" id="bars"></div><div class="legend" id="legend"></div></div>
     <div class="card" style="overflow:auto"><table id="table"></table></div>
+    <div class="card row"><span class="grow muted">새 학년이 되면 전체 학년을 한 칸씩 올립니다. 6학년은 졸업 처리되고 기록은 시트에 남습니다.</span><button class="danger" id="promote">학년 올리기</button></div>
+    <p class="muted" id="dash-note" role="status"></p>
     <p class="error" id="dash-error" role="alert"></p>
   </section>
 
@@ -43,9 +46,11 @@
       <button class="primary">기록 추가</button>
     </form>
     <p class="error" id="s-error" role="alert"></p>
-    <div class="card"><table id="s-table"></table></div>
+    <div class="charts" id="charts"></div>
+    <div class="card" style="overflow:auto"><table id="s-table"></table></div>
   </section>
 </main>
-<script type="module" src="js/teacher.js?v=202611231648"></script>
+<script type="module" src="js/teacher.js?v=1"></script>
+<div class="ver-foot" id="ver"></div>
 </body>
 </html>
