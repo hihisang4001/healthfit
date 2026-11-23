@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>건강체력 증진 도우미</title>
+<link rel="stylesheet" href="css/app.css">
+<script src="js/vendor/html5-qrcode.min.js"></script>
+</head>
+<body>
+<main id="app">
+  <section data-view="scan">
+    <h1>건강체력 증진 도우미</h1>
+    <p class="muted">내 QR 카드를 카메라에 대 주세요.</p>
+    <div id="reader"></div>
+    <p class="error" id="scan-error" role="alert"></p>
+  </section>
+
+  <section data-view="home" hidden>
+    <div class="row"><h1 class="grow" id="hello"></h1><button class="ghost" id="logout">다른 친구</button></div>
+    <div class="row"><button class="primary grow" id="go-record">기록하기</button><button class="grow" id="go-mine">내 기록</button></div>
+  </section>
+
+  <section data-view="record" hidden>
+    <div class="row"><h2 class="grow">오늘 측정한 항목을 골라요</h2><button class="ghost" data-back>뒤로</button></div>
+    <div class="items" id="items"></div>
+    <form id="form" class="card" hidden>
+      <label for="value" id="value-label"></label>
+      <div class="row">
+        <button type="button" id="minus" hidden aria-label="마이너스">−</button>
+        <input id="value" inputmode="decimal" autocomplete="off" class="grow">
+        <span id="unit"></span>
+      </div>
+      <p class="error" id="form-error" role="alert"></p>
+      <button class="primary" id="save">저장하기</button>
+    </form>
+  </section>
+
+  <section data-view="result" hidden>
+    <div class="card result" id="result"></div>
+    <div class="row"><button class="primary grow" id="again">다른 항목 기록하기</button><button class="grow" id="to-mine">내 기록 보기</button></div>
+  </section>
+
+  <section data-view="mine" hidden>
+    <div class="row"><h2 class="grow">내 기록</h2><button class="ghost" data-back>뒤로</button></div>
+    <div class="mine" id="mine"></div>
+  </section>
+</main>
+<script type="module" src="js/student.js"></script>
+</body>
+</html>

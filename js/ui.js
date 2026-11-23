@@ -1,0 +1,19 @@
+import { setTable, TIERS } from './tiers.js';
+export async function loadTable() {
+  const res = await fetch(new URL('./data/paps-tier-table.json', import.meta.url));
+  setTable(await res.json());
+}
+export function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') n.className = v; else if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  return n;
+}
+const FILES = ['01-iron', '02-bronze', '03-silver', '04-gold', '05-platinum', '06-diamond', '07-master', '08-grandmaster', '09-challenger'];
+export function badge(index, small = false) {
+  return el('img', { class: `badge t${index}${small ? ' sm' : ''}`, src: new URL(`../assets/badges/${FILES[index]}.png`, import.meta.url).href, alt: TIERS[index] });
+}
+export function show(root, id) { root.querySelectorAll('[data-view]').forEach((v) => (v.hidden = v.dataset.view !== id)); }
+export function fmt(item, v) { return item === 'run50' ? v.toFixed(2) : String(v); }
