@@ -282,3 +282,7 @@ body[data-view=result] .result .next-tier b{white-space:nowrap}
   body[data-view=record] #form .pad button{font-size:28px;border-radius:14px}
   body[data-view=record] #form #save{font-size:26px;padding:8px}
 }
+
+.dlg{position:relative}
+.dlg-x{position:absolute;top:2vmin;right:2vmin;min-height:0;width:auto;padding:1.4vmin 3vmin;border-radius:16px;font-size:clamp(18px,3.2vmin,30px);font-family:var(--display);font-weight:400;background:#EEF2F8;color:var(--ink);box-shadow:none}
+#undone .dlg p{margin-top:6vmin}

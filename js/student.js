@@ -197,8 +197,8 @@ function askUndone(itemKey) {
   const box = $('undone'), it = ITEMS.find((x) => x.key === itemKey);
   $('undone-msg').textContent = it ? `${it.label} 기록을 취소했어요` : '기록을 취소했어요';
   box.hidden = false; $('undone-again').focus();
-  const done = (again) => { box.hidden = true; $('undone-again').onclick = null; if (again && it) pick(it); };
-  $('undone-again').onclick = () => done(true);
+  const done = (again) => { box.hidden = true; $('undone-again').onclick = $('undone-close').onclick = null; if (again && it) pick(it); };
+  $('undone-again').onclick = () => done(true); $('undone-close').onclick = () => done(false);
 }
 function showResult(rec, pending = false) {
   const it = itemOf(rec.item), t = tierOf(rec), box = $('result'); box.replaceChildren();
@@ -298,7 +298,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '18';
+const BUILD = '19';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
