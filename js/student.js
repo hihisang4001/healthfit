@@ -50,14 +50,15 @@ async function startScanner() {
 }
 
 function renderItems() {
-  const box = $('items'); box.replaceChildren();
+  const box = $('items'); box.replaceChildren(); box.classList.remove('has-pick');
   $('form').hidden = true; picked = null;
   for (const it of ITEMS) {
-    box.append(el('button', { 'aria-pressed': 'false', onclick: (ev) => pick(it, ev.currentTarget) }, it.label, el('div', { class: 'muted' }, `단위: ${it.unit}`)));
+    box.append(el('button', { 'data-item': it.key, 'aria-pressed': 'false', onclick: (ev) => pick(it, ev.currentTarget) }, it.label, el('div', { class: 'muted' }, `단위: ${it.unit}`)));
   }
 }
 function pick(it, btn) {
   picked = it;
+  $('items').classList.add('has-pick');
   $('items').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
   $('form').hidden = false; $('form-error').textContent = '';
   $('value-label').textContent = `${it.label} 기록`; $('unit').textContent = it.unit;

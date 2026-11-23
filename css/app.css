@@ -83,3 +83,37 @@ body[data-view=record] #form .row{flex-wrap:nowrap}
 body[data-view=record] #form #save{width:100%;font-size:clamp(28px,6vmin,64px);padding:14px}
 body[data-view=record] #form #minus{font-size:clamp(28px,6vmin,60px);padding:6px 18px}
 body[data-view=record] #form .error{min-height:0;margin:4px 0;font-size:clamp(16px,3vmin,28px)}body[data-view=record] #form .error:empty{display:none}
+
+/* 글씨체 통일: 모든 버튼·블록은 같은 제목 글꼴 */
+button,.items button .muted{font-family:var(--display);font-weight:400}
+body[data-view=record] .items button .muted{font-size:.55em;opacity:.9}
+/* 간격 통일 */
+:root{--gap:12px}
+body[data-view=home] main,body[data-view=record] main,body[data-view=result] main{padding:var(--gap)}
+body[data-view=home] section[data-view=home],body[data-view=record] section[data-view=record],body[data-view=result] section[data-view=result]{gap:var(--gap)}
+.blocks,body[data-view=record] .items{gap:var(--gap)}
+body[data-view=record] #form,body[data-view=result] .card.result{margin:0}
+/* 종목별 색 */
+.items button[data-item]{border:0;color:#fff;background:var(--c);box-shadow:0 5px 0 var(--cd);transition:transform .08s,box-shadow .08s,opacity .15s}
+.items button[data-item]:active{transform:translateY(3px);box-shadow:0 2px 0 var(--cd)}
+.items button[data-item=shuttle_run]{--c:#1E7BD8;--cd:#14569A}
+.items button[data-item=curl_up]{--c:#2E9E5B;--cd:#1F6F3F}
+.items button[data-item=standing_jump]{--c:#E08A00;--cd:#9E6100}
+.items button[data-item=sit_reach]{--c:#7A4CC2;--cd:#54308A}
+.items button[data-item=run50]{--c:#C4432B;--cd:#932F1C}
+.items button[data-item] .muted{color:#fff}
+.items.has-pick button[data-item][aria-pressed=false]{opacity:.45}
+.items button[data-item][aria-pressed=true]{background:var(--c);color:#fff;outline:6px solid var(--ink);outline-offset:-6px}
+@media (orientation:portrait){
+  body[data-view=result] .blocks.short{flex:0 0 32%}
+  body[data-view=record] .items button{font-size:clamp(28px,7.2vmin,72px)}
+  .blocks button,.blocks button.primary{font-size:clamp(36px,11vmin,120px)}
+  body[data-view=result] .blocks.short button,body[data-view=result] .blocks.short button.primary{font-size:clamp(26px,7vmin,70px)}
+  body[data-view=result] .result .badge{width:min(34vmin,320px);height:min(34vmin,320px)}
+}
+:root{--gap:16px}
+body[data-view=record] #form{display:flex;flex-direction:column;gap:12px}
+body[data-view=record] #form #save{margin-top:4px}
+.items.has-pick button[data-item][aria-pressed=false]{opacity:.55}
+body[data-view=record] .items.has-pick button{font-size:clamp(20px,4.6vmin,48px);line-height:1.1;gap:2px}
+body[data-view=record] .items.has-pick button .muted{font-size:.6em}
