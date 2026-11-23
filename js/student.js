@@ -60,15 +60,17 @@ async function startScanner() {
   if (scanner) return;
   scanner = true;
   $('cam-retry').hidden = true;
-  try { scanner = await startScan('reader', (id) => login(id)); }
+  // 6초가 지나도 카메라가 안 켜지면(허용 창이 안 보이거나 멈춘 경우) 안내와 다시 켜기 버튼을 보여 준다
+  const slowTimer = setTimeout(() => { if (scanner === true) { $('scan-error').textContent = '카메라가 켜지지 않고 있어요. 카메라 허용 창이 떠 있으면 \'허용\'을 눌러 주세요.'; $('cam-retry').hidden = false; } }, 6000);
+  try { scanner = await startScan('reader', (id) => login(id)); clearTimeout(slowTimer); $('scan-error').textContent = ''; $('cam-retry').hidden = true; }
   catch (e) {
-    scanner = null;
+    clearTimeout(slowTimer); scanner = null;
     const why = { NotAllowedError: '카메라 사용이 막혀 있어요. 브라우저 설정에서 카메라를 허용해 주세요.', NotFoundError: '카메라를 찾지 못했어요.', NotReadableError: '다른 앱이 카메라를 쓰고 있어요. 그 앱을 닫아 주세요.', OverconstrainedError: '이 기기의 카메라를 켤 수 없어요.' }[e && e.name];
     if (!$('scan-error').textContent) $('scan-error').textContent = (why || '카메라를 켤 수 없어요.') + ` (${(e && (e.name || e.message)) || '원인 알 수 없음'})`;
     $('cam-retry').hidden = false;
   }
 }
-$('cam-retry').addEventListener('click', () => { $('scan-error').textContent = ''; scanner = null; startScanner(); });
+$('cam-retry').addEventListener('click', () => location.reload());   // 멈춘 카메라 상태를 지우려면 화면을 새로 여는 것이 가장 확실하다
 
 function renderItems() {
   const box = $('items'); box.replaceChildren(); box.classList.remove('has-pick'); box.hidden = false;
@@ -296,7 +298,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '16';
+const BUILD = '17';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
@@ -304,7 +306,14 @@ fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json(
 const tableReady = loadTable();
 const devId = DEV && new URLSearchParams(location.search).get('id');
 if (devId) { await tableReady; login(devId); } else startScanner();
-if ('serviceWorker' in navigator && !devId) navigator.serviceWorker.register('sw.js').catch(() => {});   // 인터넷이 없어도 앱 화면이 열리게 기기에 보관
+// 주소 끝에 ?nosw=1 을 붙여 한 번 열면, 이 기기의 오프라인 보관 기능(서비스 워커)을 끄고 보관 파일을 지운다(문제 원인 확인용)
+try { if (new URLSearchParams(location.search).get('nosw') === '1') localStorage.setItem('hf-nosw', '1'); if (new URLSearchParams(location.search).get('nosw') === '0') localStorage.removeItem('hf-nosw'); } catch (e) {}
+let noSw = false; try { noSw = localStorage.getItem('hf-nosw') === '1'; } catch (e) {}
+if ('serviceWorker' in navigator && noSw) {
+  navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
+  if (window.caches) caches.keys().then((ks) => ks.forEach((k) => caches.delete(k))).catch(() => {});
+  $('ver').textContent += ' (오프라인 보관 꺼짐)';
+} else if ('serviceWorker' in navigator && !devId) navigator.serviceWorker.register('sw.js').catch(() => {});   // 인터넷이 없어도 앱 화면이 열리게 기기에 보관
 await tableReady;
 // 앱스크립트 서버를 미리 깨워 둔다(처음 요청이 느린 것을 줄임)
 api.warm();
