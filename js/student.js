@@ -149,9 +149,19 @@ async function undoLast() {
   try {
     await api.studentUndo(me.id, saved.recordId);
     const i = me.records.findIndex((r) => r.recordId === saved.recordId); if (i >= 0) me.records.splice(i, 1);
+    const itemKey = lastSave.rec.item;
     lastSave = null; renderItems(); view('record');
     $('rec-title').textContent = '취소했어요. 다시 골라요';
+    askUndone(itemKey);
   } catch (e) { setSaved(e.message, true); b.hidden = true; }
+}
+// 취소 완료 팝업: '다시 기록하기'는 방금 고른 종목의 입력 화면으로 바로 간다
+function askUndone(itemKey) {
+  const box = $('undone'), it = ITEMS.find((x) => x.key === itemKey);
+  $('undone-msg').textContent = it ? `${it.label} 기록을 취소했어요` : '기록을 취소했어요';
+  box.hidden = false; $('undone-again').focus();
+  const done = (again) => { box.hidden = true; $('undone-again').onclick = $('undone-menu').onclick = null; if (again && it) pick(it); };
+  $('undone-again').onclick = () => done(true); $('undone-menu').onclick = () => done(false);
 }
 function showResult(rec, pending = false) {
   const it = itemOf(rec.item), t = tierOf(rec), box = $('result'); box.replaceChildren();
@@ -211,7 +221,7 @@ $('logout').addEventListener('click', logout);
 root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { if (b.closest('[data-view=record]') && !$('form').hidden) renderItems(); else view('home'); }));
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '7';
+const BUILD = '8';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);

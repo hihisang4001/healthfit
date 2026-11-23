@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#C4432B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=7">
+<link rel="stylesheet" href="css/app.css?v=8">
 <script src="js/vendor/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -63,7 +63,13 @@
     <div class="dlg-btns"><button type="button" id="confirm-no">다시 입력</button><button type="button" class="primary" id="confirm-yes">네, 맞아요</button></div>
   </div>
 </div>
-<script type="module" src="js/student.js?v=7"></script>
+<div class="modal" id="undone" role="alertdialog" aria-modal="true" aria-labelledby="undone-msg" hidden>
+  <div class="dlg">
+    <p id="undone-msg"></p>
+    <div class="dlg-btns"><button type="button" id="undone-menu">종목 고르기</button><button type="button" class="primary" id="undone-again">다시 기록하기</button></div>
+  </div>
+</div>
+<script type="module" src="js/student.js?v=8"></script>
 <div class="ver-foot" id="ver"></div>
 </body>
 </html>
