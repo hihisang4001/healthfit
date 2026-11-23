@@ -92,9 +92,9 @@ function chart(item, pts) {
     return [x, y];
   });
   const line = document.createElementNS(NS, 'polyline');
-  line.setAttribute('points', xy.map((q) => q.join(',')).join(' ')); line.setAttribute('fill', 'none'); line.setAttribute('stroke', '#ffd34d'); line.setAttribute('stroke-width', '3');
+  line.setAttribute('points', xy.map((q) => q.join(',')).join(' ')); line.setAttribute('fill', 'none'); line.setAttribute('stroke', '#22704A'); line.setAttribute('stroke-width', '3');
   svg.append(line);
-  xy.forEach(([x, y]) => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 5); c.setAttribute('fill', '#fff'); svg.append(c); });
+  xy.forEach(([x, y]) => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 5); c.setAttribute('fill', '#C4432B'); svg.append(c); });
   return svg;
 }
 function renderMine() {

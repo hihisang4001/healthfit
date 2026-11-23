@@ -4,14 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>건강체력 증진 도우미</title>
+<meta name="theme-color" content="#C4432B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 <script src="js/vendor/html5-qrcode.min.js"></script>
 </head>
 <body>
+<header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="teacher.html">교사용</a></header>
 <main id="app">
   <section data-view="scan">
-    <h1>건강체력 증진 도우미</h1>
-    <p class="muted">내 QR 카드를 카메라에 대 주세요.</p>
+    <h1>QR 카드를 보여 주세요</h1>
+    <p class="muted">앞 카메라에 내 카드를 대면 돼요.</p>
     <div id="reader"></div>
     <p class="error" id="scan-error" role="alert"></p>
   </section>
