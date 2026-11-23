@@ -17,23 +17,37 @@ function bumpIdle() { clearTimeout(idleTimer); if (me) idleTimer = setTimeout(lo
 function view(id) { show(root, id); bumpIdle(); }
 function tierOf(r) { return tierFor(r.item, gradeKey(r.grade, me.sex), r.value); }
 
+// 카메라는 계속 켜 둔다. 읽히면 잠깐 멈췄다가(pause) 다음 학생 때 다시 이어서(resume) 쓴다.
 async function login(id) {
   $('scan-error').textContent = '';
+  // 기다리지 않고 바로 다음 화면부터 보여 준다 (이름·학년은 서버에서 오는 대로 채움)
+  me = { id: normalize(id), name: '', grade: 0, sex: '', records: [], loading: true };
+  $('hello').textContent = '불러오는 중…';
+  $('go-record').disabled = $('go-mine').disabled = true;
+  view('home');
+  try { scanner && scanner.pause && scanner.pause(true); } catch (e) {}
   try {
     const d = await api.studentMe(id);
-    me = { id: normalize(id), name: d.name, grade: d.grade, sex: d.sex, records: d.records };
+    if (!me || me.id !== normalize(id)) return;
+    Object.assign(me, { name: d.name, grade: d.grade, sex: d.sex, records: d.records, loading: false });
     $('hello').textContent = `${me.name} (${me.grade}학년)`;
-    view('home');
-  } catch (e) { $('scan-error').textContent = e.message; startScanner(); }
+    $('go-record').disabled = $('go-mine').disabled = false;
+  } catch (e) {
+    me = null; $('scan-error').textContent = e.message; view('scan'); resumeScanner();
+  }
 }
-function logout() { me = null; picked = null; clearTimeout(idleTimer); view('scan'); startScanner(); }
+function resumeScanner() {
+  if (!scanner || scanner === true) return startScanner();
+  try { scanner.resume(); } catch (e) {}
+  scanner.__ready && scanner.__ready();
+}
+function logout() { me = null; picked = null; clearTimeout(idleTimer); view('scan'); resumeScanner(); }
 async function startScanner() {
   if (scanner) return;
   scanner = true;
-  try { scanner = await startScan('reader', async (id) => { await stopScanner(); login(id); }); }
+  try { scanner = await startScan('reader', (id) => login(id)); }
   catch (e) { scanner = null; if (!$('scan-error').textContent) $('scan-error').textContent = '카메라를 켤 수 없어요. 선생님께 알려 주세요.'; }
 }
-async function stopScanner() { const s = scanner; scanner = null; if (s && s.stop) { try { await s.stop(); } catch (e) {} } }
 
 function renderItems() {
   const box = $('items'); box.replaceChildren();
@@ -58,15 +72,23 @@ $('form').addEventListener('submit', async (ev) => {
   if (raw === '' || !/^-?\d+(\.\d+)?$/.test(raw)) { $('form-error').textContent = '숫자로 입력해 주세요.'; return; }
   if (n < picked.min || n > picked.max) { $('form-error').textContent = `${picked.min}부터 ${picked.max} 사이의 숫자를 입력해 주세요.`; return; }
   $('save').disabled = true;
+  // 저장 결과를 기다리지 않고 바로 등급 화면을 보여 주고, 저장은 뒤에서 확인한다
+  const rec = { id: me.id, item: picked.key, value: n, grade: me.grade, date: today() };
+  const before = me.records.length;
+  me.records.push(rec);
+  showResult(rec, true);
   try {
     const d = await api.studentAdd(me.id, picked.key, raw);
-    me.records.push(d.record);
-    showResult(d.record);
-  } catch (e) { $('form-error').textContent = e.message; }
-  finally { $('save').disabled = false; }
+    const i = me.records.indexOf(rec); if (i >= 0) me.records[i] = d.record;
+    setSaved('저장했어요 ✓', false);
+  } catch (e) {
+    const i = me.records.indexOf(rec); if (i >= 0) me.records.splice(i, 1);
+    setSaved(`저장하지 못했어요. ${e.message} 다시 기록해 주세요.`, true);
+  } finally { $('save').disabled = false; }
 });
+function setSaved(msg, bad) { const p = $('save-state'); if (p) { p.textContent = msg; p.className = bad ? 'error' : 'muted'; } }
 
-function showResult(rec) {
+function showResult(rec, pending = false) {
   const it = itemOf(rec.item), t = tierOf(rec), box = $('result'); box.replaceChildren();
   box.append(el('h2', {}, `${it.label} ${fmt(rec.item, rec.value)}${it.unit}`));
   if (!t) {
@@ -77,6 +99,7 @@ function showResult(rec) {
   }
   const best = bestOfDay(me.records.filter((r) => r.id === me.id && r.item === rec.item && r.date === rec.date))[0];
   if (best && best.value !== rec.value) box.append(el('p', { class: 'muted' }, `오늘의 최고 기록은 ${fmt(rec.item, best.value)}${it.unit}이에요.`));
+  box.append(el('p', { id: 'save-state', class: 'muted' }, pending ? '저장하는 중…' : ''));
   view('result');
 }
 
@@ -116,6 +139,9 @@ $('again').addEventListener('click', () => { renderItems(); view('record'); });
 $('logout').addEventListener('click', logout);
 root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => view('home')));
 
-await loadTable();
+const tableReady = loadTable();
 const devId = DEV && new URLSearchParams(location.search).get('id');
-if (devId) login(devId); else startScanner();
+if (devId) { await tableReady; login(devId); } else startScanner();
+await tableReady;
+// 앱스크립트 서버를 미리 깨워 둔다(처음 요청이 느린 것을 줄임)
+api.warm();
