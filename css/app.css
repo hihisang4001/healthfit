@@ -243,3 +243,5 @@ body[data-view=result] .result .next-tier span{text-wrap:balance;text-align:cent
 @media (orientation:landscape){body[data-view=result] .result .next-tier{font-size:clamp(20px,3.3vmin,40px)}}
 body[data-view=result] .result .next-tier b{font-family:inherit;font-weight:500;color:#1F5FBF;letter-spacing:0;margin-right:.05em}
 @media (orientation:portrait){.dlg-btns #undone-again{order:-1}}
+body[data-view=result] .blocks.short{grid-template-columns:1fr}
+body[data-view=result] .blocks.short{flex:0 0 18%}
