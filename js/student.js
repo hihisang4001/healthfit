@@ -177,7 +177,7 @@ function showResult(rec, pending = false) {
   const best = bestOfDay(me.records.filter((r) => r.id === me.id && r.item === rec.item && r.date === rec.date))[0];
   if (best && best.value !== rec.value) box.append(el('p', { class: 'muted' }, `오늘의 최고 기록은 ${fmt(rec.item, best.value)}${it.unit}이에요.`));
   box.append(el('p', { id: 'save-state', class: 'muted' }, pending ? '저장하는 중…' : ''));
-  box.append(el('button', { id: 'undo', type: 'button', class: 'danger', onclick: undoLast }, '잘못 입력했어요'));
+  const ub = $('undo'); ub.hidden = false; ub.disabled = false; ub.textContent = '잘못 입력했어요';   // 취소 버튼은 '내 기록 보기' 옆의 큰 버튼
   view('result'); startResultTimer();
 }
 
@@ -214,11 +214,12 @@ $('go-record').addEventListener('click', () => { renderItems(); view('record'); 
 $('go-mine').addEventListener('click', () => { renderMine(); view('mine'); });
 $('to-mine').addEventListener('click', stopResultTimer, true);
 $('to-mine').addEventListener('click', () => { renderMine(); view('mine'); });
+$('undo').addEventListener('click', undoLast);
 $('logout').addEventListener('click', logout);
 root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { if (b.closest('[data-view=record]') && !$('form').hidden) renderItems(); else view('home'); }));
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '11';
+const BUILD = '12';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);

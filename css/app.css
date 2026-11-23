@@ -245,3 +245,7 @@ body[data-view=result] .result .next-tier b{font-family:inherit;font-weight:500;
 @media (orientation:portrait){.dlg-btns #undone-again{order:-1}}
 body[data-view=result] .blocks.short{grid-template-columns:1fr}
 body[data-view=result] .blocks.short{flex:0 0 18%}
+body[data-view=result] .blocks.short{grid-template-columns:1fr;grid-auto-rows:1fr;flex:0 0 36%}
+@media (orientation:landscape){body[data-view=result] .blocks.short{grid-template-columns:1fr 1fr;grid-auto-rows:auto;flex:0 0 26%}}
+body[data-view=result] .blocks.short button.danger{background:#FDECEC;color:var(--bad);border:3px solid #F2B8B8;box-shadow:none}
+body[data-view=result] .blocks.short button[hidden]{display:none}
