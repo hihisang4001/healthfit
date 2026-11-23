@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#C4432B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=202611231643">
+<link rel="stylesheet" href="css/app.css?v=202611231648">
 <script src="js/vendor/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -51,6 +51,12 @@
     <div class="mine" id="mine"></div>
   </section>
 </main>
-<script type="module" src="js/student.js?v=202611231643"></script>
+<div class="modal" id="confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-msg" hidden>
+  <div class="dlg">
+    <p id="confirm-msg"></p>
+    <div class="dlg-btns"><button type="button" id="confirm-no">다시 입력</button><button type="button" class="primary" id="confirm-yes">네, 맞아요</button></div>
+  </div>
+</div>
+<script type="module" src="js/student.js?v=202611231648"></script>
 </body>
 </html>

@@ -96,13 +96,21 @@ $('form').addEventListener('submit', async (ev) => {
   const n = Number(raw);
   if (raw === '' || !/^-?\d+(\.\d+)?$/.test(raw)) { $('form-error').textContent = '숫자를 눌러 입력해 주세요.'; return; }
   if (n < picked.min || n > picked.max) { $('form-error').textContent = `${picked.min}부터 ${picked.max} 사이의 숫자를 입력해 주세요.`; return; }
-  // 평소와 크게 다른 값: 같은 값으로 한 번 더 누르면 저장
-  if (isImplausible(picked.key, gradeKey(me.grade, me.sex), n) && askedFor !== `${picked.key}|${raw}`) {
-    askedFor = `${picked.key}|${raw}`;
-    $('form-error').textContent = `정말 ${raw}${picked.unit}가 맞아요? 맞으면 한 번 더 눌러요.`;
-    $('save').textContent = '네, 맞아요';
+  // 평소와 크게 다른 값: 큰 팝업으로 한 번 더 확인
+  if (isImplausible(picked.key, gradeKey(me.grade, me.sex), n)) {
+    askConfirm(`정말 ${raw}${picked.unit}가 맞아요?`).then((yes) => { if (yes) doSave(raw, n); });
     return;
   }
+  doSave(raw, n);
+});
+function askConfirm(msg) {
+  return new Promise((resolve) => {
+    const box = $('confirm'); $('confirm-msg').textContent = msg; box.hidden = false; $('confirm-yes').focus();
+    const done = (v) => { box.hidden = true; $('confirm-yes').onclick = $('confirm-no').onclick = null; resolve(v); };
+    $('confirm-yes').onclick = () => done(true); $('confirm-no').onclick = () => done(false);
+  });
+}
+async function doSave(raw, n) {
   $('save').disabled = true;
   // 저장 결과를 기다리지 않고 바로 등급 화면을 보여 주고, 저장은 뒤에서 확인한다
   const rec = { id: me.id, item: picked.key, value: n, grade: me.grade, date: today() };
@@ -117,7 +125,7 @@ $('form').addEventListener('submit', async (ev) => {
   lastSave = { rec, promise };
   showResult(rec, true);
   promise.finally(() => { $('save').disabled = false; });
-});
+}
 $('value').addEventListener('input', resetAsk);
 function resetAsk() { askedFor = null; $('save').textContent = '저장하기'; }
 function setSaved(msg, bad) { const p = $('save-state'); if (p) { p.textContent = msg; p.className = bad ? 'error' : 'muted'; } }

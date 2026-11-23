@@ -176,3 +176,13 @@ body[data-view=record] #form .pad button.del{font-size:clamp(24px,5.6vmin,60px)}
   body[data-view=record] #form .disp input{font-size:clamp(56px,13vmin,130px);height:clamp(70px,16vmin,160px)}
   body[data-view=record] #form .pad button{font-size:clamp(22px,5vmin,56px)}
 }
+
+/* 확인 팝업 */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(28,36,32,.62);display:flex;align-items:center;justify-content:center;padding:var(--gap,16px)}
+.modal[hidden]{display:none}
+.dlg{width:min(94vw,720px);background:#fff;border-radius:28px;padding:5vmin;box-shadow:0 12px 0 rgba(0,0,0,.18);display:grid;gap:4vmin;text-align:center}
+.dlg p{margin:0;font-family:var(--display);font-size:clamp(34px,8.5vmin,88px);line-height:1.25;word-break:keep-all;color:var(--ink)}
+.dlg-btns{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap,16px)}
+.dlg-btns button{min-height:0;padding:3.2vmin 8px;border-radius:20px;font-size:clamp(28px,6.4vmin,64px);font-family:var(--display);font-weight:400}
+.dlg-btns button.primary{box-shadow:0 5px 0 var(--track-deep);font-size:clamp(28px,6.4vmin,64px);min-height:0}
+@media (orientation:portrait){.dlg-btns{grid-template-columns:1fr}.dlg-btns #confirm-yes{order:-1}}
