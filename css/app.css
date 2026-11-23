@@ -231,3 +231,6 @@ body[data-view=result] .result p{font-size:clamp(17px,2.8vmin,30px)}
   body[data-view=result] .result > .badge{grid-column:1;grid-row:1 / span 8;width:min(52vmin,440px);height:min(52vmin,440px)}
   body[data-view=result] .result .big{font-size:clamp(44px,11vmin,140px)}
 }
+.result .next-tier{display:flex;align-items:center;justify-content:center;gap:1.4vmin}
+body[data-view=result] .result .next-tier .badge{width:min(9vmin,84px);height:min(9vmin,84px);animation:none;flex:none}
+.result .saved{color:#1E8A4C;font-weight:700}
