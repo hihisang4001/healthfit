@@ -160,7 +160,7 @@ function showResult(rec, pending = false) {
     box.append(el('p', {}, '기록을 저장했어요. 등급을 보려면 선생님께 성별 등록을 요청하세요.'));
   } else {
     box.append(badge(t.index), el('div', { class: 'big' }, t.tier));
-    box.append(t.next ? el('p', { class: 'next-tier' }, badge(t.index + 1, true), `${t.next.tier}까지 ${t.next.needed}${it.unit} ${rec.item === 'run50' ? '더 빨리' : '더'} 필요해요!`) : el('p', {}, '가장 높은 등급이에요! 대단해요!'));
+    box.append(t.next ? el('p', { class: 'next-tier' }, badge(t.index + 1, true), el('span', {}, `${t.next.tier}까지 `, el('b', {}, `${t.next.needed}${it.unit}`), ` ${rec.item === 'run50' ? '더 빨리' : '더'} 필요해요!`)) : el('p', {}, '가장 높은 등급이에요! 대단해요!'));
     const pm = me.peers && me.peers[rec.item], pt = pm && tierFor(rec.item, gradeKey(me.grade, me.sex), pm.mean);
     box.append(pt ? el('div', { class: 'peer' }, '같은 학년·성별 친구 평균', badge(pt.index, true), el('b', {}, pt.tier))
       : el('p', { class: 'muted' }, '아직 비교할 친구가 부족해요.'));
@@ -211,7 +211,7 @@ $('logout').addEventListener('click', logout);
 root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { if (b.closest('[data-view=record]') && !$('form').hidden) renderItems(); else view('home'); }));
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '3';
+const BUILD = '5';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
