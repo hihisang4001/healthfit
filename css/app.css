@@ -5,7 +5,7 @@
 html,body{margin:0;min-height:100%}
 body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:19px;line-height:1.5;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 [hidden]{display:none!important}
-.topbar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--track);color:#fff}
+.topbar{height:var(--top,64px);display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--track);color:#fff}
 .topbar .brand{font-family:var(--display);font-size:24px;letter-spacing:.5px;margin-right:auto}
 .topbar a{color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.55)}
 main{max-width:980px;margin:0 auto;padding:20px 16px 48px}
@@ -45,3 +45,41 @@ th{position:sticky;top:0;background:var(--card);word-break:keep-all;font-size:16
 .bars span{position:absolute;top:-1.4em;left:0;right:0;text-align:center;font-size:.85rem;font-weight:700}
 .legend{display:flex;gap:4px;font-size:.8rem;color:var(--ink-soft)}.legend div{flex:1;text-align:center}
 @media (prefers-reduced-motion:no-preference){.result .badge{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}}
+
+/* QR 인식 뒤 화면(홈·항목 고르기·결과): 선택 블록이 여백 없이 화면을 가득 채우고, 글씨도 화면 크기에 맞춰 커진다 */
+:root{--top:64px}
+body[data-view=home] main,body[data-view=record] main,body[data-view=result] main{max-width:none;height:calc(100dvh - var(--top));padding:8px;display:flex;flex-direction:column}
+body[data-view=home] section[data-view=home],body[data-view=record] section[data-view=record],body[data-view=result] section[data-view=result]{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+body[data-view=home] h1,body[data-view=record] h2{font-size:clamp(24px,5vmin,48px);margin:0}
+body[data-view=home] .row button,body[data-view=record] .row button{min-height:0;padding:10px 20px;font-size:clamp(18px,3.4vmin,30px)}
+.blocks{flex:1;min-height:0;display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.blocks button{min-height:0;height:100%;border-radius:22px;font-size:clamp(34px,9vmin,110px);line-height:1.2;padding:8px;display:flex;align-items:center;justify-content:center;text-align:center;word-break:keep-all}
+.blocks button.primary{font-size:clamp(34px,9vmin,110px);box-shadow:0 6px 0 var(--track-deep)}
+@media (orientation:portrait){.blocks{grid-template-columns:1fr;grid-auto-rows:1fr}}
+body[data-view=result] .blocks.short{flex:0 0 28%}
+body[data-view=result] .blocks.short button,body[data-view=result] .blocks.short button.primary{font-size:clamp(24px,5.5vmin,64px)}
+body[data-view=result] .card.result{flex:1;min-height:0;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vmin}
+body[data-view=result] .result h2{font-size:clamp(28px,6vmin,64px)}
+body[data-view=result] .result .big{font-size:clamp(44px,11vmin,130px)}
+body[data-view=result] .result p{font-size:clamp(20px,3.6vmin,40px);margin:0}
+body[data-view=result] .result .badge{width:min(40vmin,300px);height:min(40vmin,300px)}
+body[data-view=record] .items{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:8px}
+body[data-view=record] .items button{min-height:0;height:100%;border-radius:20px;font-size:clamp(26px,6vmin,64px);line-height:1.25;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;word-break:keep-all}
+body[data-view=record] .items button .muted{font-size:.5em;font-weight:500}
+body[data-view=record] .items button:last-child:nth-child(odd){grid-column:1/-1}
+@media (orientation:portrait){body[data-view=record] .items{grid-template-columns:1fr}}
+body[data-view=record] #form{margin:0;padding:12px;flex:none}
+body[data-view=record] #form label{font-size:clamp(16px,3vmin,26px)}
+body[data-view=record] #form input{font-size:clamp(26px,5.5vmin,56px);min-height:0;padding:8px 14px}
+body[data-view=record] #form #unit{font-size:clamp(20px,4vmin,40px);font-weight:700}
+body[data-view=record] #form button{min-height:0;font-size:clamp(24px,5vmin,52px);padding:10px}
+body[data-view=result] .card.result{overflow:hidden;gap:1vmin;padding:8px}
+body[data-view=result] .result .badge{width:min(26vmin,240px);height:min(26vmin,240px)}
+body[data-view=result] .result h2{font-size:clamp(26px,5vmin,56px);margin:0}
+body[data-view=result] .result .big{font-size:clamp(40px,9vmin,110px);line-height:1.1}
+body[data-view=result] .result p{font-size:clamp(20px,3.4vmin,38px)}
+body[data-view=result] .blocks.short{flex:0 0 26%}
+body[data-view=record] #form .row{flex-wrap:nowrap}
+body[data-view=record] #form #save{width:100%;font-size:clamp(28px,6vmin,64px);padding:14px}
+body[data-view=record] #form #minus{font-size:clamp(28px,6vmin,60px);padding:6px 18px}
+body[data-view=record] #form .error{min-height:0;margin:4px 0;font-size:clamp(16px,3vmin,28px)}body[data-view=record] #form .error:empty{display:none}

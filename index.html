@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#C4432B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=202611231544">
+<link rel="stylesheet" href="css/app.css?v=202611231548">
 <script src="js/vendor/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -22,7 +22,7 @@
 
   <section data-view="home" hidden>
     <div class="row"><h1 class="grow" id="hello"></h1><button class="ghost" id="logout">다른 친구</button></div>
-    <div class="row"><button class="primary grow" id="go-record">기록하기</button><button class="grow" id="go-mine">내 기록</button></div>
+    <div class="blocks"><button class="primary" id="go-record">기록하기</button><button id="go-mine">내 기록</button></div>
   </section>
 
   <section data-view="record" hidden>
@@ -42,7 +42,7 @@
 
   <section data-view="result" hidden>
     <div class="card result" id="result"></div>
-    <div class="row"><button class="primary grow" id="again">다른 항목 기록하기</button><button class="grow" id="to-mine">내 기록 보기</button></div>
+    <div class="blocks short"><button class="primary" id="again">다른 항목 기록하기</button><button id="to-mine">내 기록 보기</button></div>
   </section>
 
   <section data-view="mine" hidden>
@@ -50,6 +50,6 @@
     <div class="mine" id="mine"></div>
   </section>
 </main>
-<script type="module" src="js/student.js?v=202611231544"></script>
+<script type="module" src="js/student.js?v=202611231548"></script>
 </body>
 </html>

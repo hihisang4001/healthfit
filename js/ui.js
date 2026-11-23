@@ -15,5 +15,5 @@ const FILES = ['01-iron', '02-bronze', '03-silver', '04-gold', '05-platinum', '0
 export function badge(index, small = false) {
   return el('img', { class: `badge t${index}${small ? ' sm' : ''}`, src: new URL(`../assets/badges/${FILES[index]}.png`, import.meta.url).href, alt: TIERS[index] });
 }
-export function show(root, id) { root.querySelectorAll('[data-view]').forEach((v) => (v.hidden = v.dataset.view !== id)); }
+export function show(root, id) { document.body.dataset.view = id; root.querySelectorAll('[data-view]').forEach((v) => (v.hidden = v.dataset.view !== id)); }
 export function fmt(item, v) { return item === 'run50' ? v.toFixed(2) : String(v); }
