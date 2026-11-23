@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>건강체력 증진 도우미</title>
+<meta name="theme-color" content="#C4432B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=202611231648">
+<script src="js/vendor/html5-qrcode.min.js"></script>
+</head>
+<body>
+<header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="teacher.html">교사용</a></header>
+<main id="app">
+  <section data-view="scan">
+    <h1>QR 카드를 보여 주세요</h1>
+    <p class="muted">앞 카메라에 내 카드를 대면 돼요.</p>
+    <div id="reader"></div>
+    <p class="error" id="scan-error" role="alert"></p>
+  </section>
+
+  <section data-view="home" hidden>
+    <div class="row"><h1 class="grow" id="hello"></h1><button class="ghost" id="logout">다른 친구</button></div>
+    <div class="blocks"><button class="primary" id="go-record">기록하기</button><button id="go-mine">내 기록</button></div>
+  </section>
+
+  <section data-view="record" hidden>
+    <div class="row"><h2 class="grow" id="rec-title">오늘 측정한 항목을 골라요</h2><button class="ghost" data-back>뒤로</button></div>
+    <div class="items" id="items"></div>
+    <form id="form" class="card" hidden>
+      <label id="value-label" for="value"></label>
+      <div class="disp">
+        <button type="button" id="minus" hidden aria-label="플러스 마이너스 바꾸기">±</button>
+        <input id="value" readonly inputmode="none" autocomplete="off" aria-label="기록">
+        <span id="unit"></span>
+      </div>
+      <p class="error" id="form-error" role="alert"></p>
+      <div class="pad" id="pad"></div>
+      <button class="primary" id="save">저장하기</button>
+    </form>
+  </section>
+
+  <section data-view="result" hidden>
+    <div class="card result" id="result"></div>
+    <div class="blocks short"><button class="primary" id="again">다른 항목 기록하기</button><button id="to-mine">내 기록 보기</button></div>
+  </section>
+
+  <section data-view="mine" hidden>
+    <div class="row"><h2 class="grow">내 기록</h2><button class="ghost" data-back>뒤로</button></div>
+    <div class="mine" id="mine"></div>
+  </section>
+</main>
+<div class="modal" id="confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-msg" hidden>
+  <div class="dlg">
+    <p id="confirm-msg"></p>
+    <div class="dlg-btns"><button type="button" id="confirm-no">다시 입력</button><button type="button" class="primary" id="confirm-yes">네, 맞아요</button></div>
+  </div>
+</div>
+<script type="module" src="js/student.js?v=202611231648"></script>
+</body>
+</html>
