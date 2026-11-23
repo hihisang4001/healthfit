@@ -59,9 +59,16 @@ function logout() { stopResultTimer(); me = null; picked = null; clearTimeout(id
 async function startScanner() {
   if (scanner) return;
   scanner = true;
+  $('cam-retry').hidden = true;
   try { scanner = await startScan('reader', (id) => login(id)); }
-  catch (e) { scanner = null; if (!$('scan-error').textContent) $('scan-error').textContent = '카메라를 켤 수 없어요. 선생님께 알려 주세요.'; }
+  catch (e) {
+    scanner = null;
+    const why = { NotAllowedError: '카메라 사용이 막혀 있어요. 브라우저 설정에서 카메라를 허용해 주세요.', NotFoundError: '카메라를 찾지 못했어요.', NotReadableError: '다른 앱이 카메라를 쓰고 있어요. 그 앱을 닫아 주세요.', OverconstrainedError: '이 기기의 카메라를 켤 수 없어요.' }[e && e.name];
+    if (!$('scan-error').textContent) $('scan-error').textContent = (why || '카메라를 켤 수 없어요.') + ` (${(e && (e.name || e.message)) || '원인 알 수 없음'})`;
+    $('cam-retry').hidden = false;
+  }
 }
+$('cam-retry').addEventListener('click', () => { $('scan-error').textContent = ''; scanner = null; startScanner(); });
 
 function renderItems() {
   const box = $('items'); box.replaceChildren(); box.classList.remove('has-pick'); box.hidden = false;
@@ -289,7 +296,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '15';
+const BUILD = '16';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
