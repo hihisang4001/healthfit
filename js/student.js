@@ -50,21 +50,43 @@ async function startScanner() {
 }
 
 function renderItems() {
-  const box = $('items'); box.replaceChildren(); box.classList.remove('has-pick');
-  $('form').hidden = true; picked = null;
+  const box = $('items'); box.replaceChildren(); box.classList.remove('has-pick'); box.hidden = false;
+  $('form').hidden = true; picked = null; $('rec-title').textContent = '오늘 측정한 항목을 골라요';
   for (const it of ITEMS) {
     box.append(el('button', { 'data-item': it.key, 'aria-pressed': 'false', onclick: (ev) => pick(it, ev.currentTarget) }, it.label, el('div', { class: 'muted' }, `단위: ${it.unit}`)));
   }
 }
+const decimalsOf = (it) => { const m = String(it.step).split('.')[1]; return m ? m.length : 0; };
+// 화면 안의 숫자 키패드: 기기 키보드는 쓰지 않는다
+function buildPad() {
+  const pad = $('pad'); pad.replaceChildren();
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
+  for (const k of keys) pad.append(el('button', { type: 'button', 'data-key': k, class: k === '⌫' ? 'del' : '', 'aria-label': k === '⌫' ? '지우기' : k === '.' ? '소수점' : k }, k === '⌫' ? '지우기' : k));
+}
+function press(k) {
+  const v = $('value'); let t = v.value; $('form-error').textContent = '';
+  const dec = decimalsOf(picked);
+  if (k === '⌫') t = t.slice(0, -1);
+  else if (k === '.') { if (dec && t !== '' && t !== '-' && !t.includes('.')) t += '.'; }
+  else {
+    const frac = t.split('.')[1];
+    if (t.replace('-', '').replace('.', '').length >= 6) return;
+    if (frac !== undefined && frac.length >= dec) return;
+    t = (t === '0' ? '' : t === '-0' ? '-' : t) + k;
+  }
+  v.value = t;
+}
 function pick(it, btn) {
   picked = it;
-  $('items').classList.add('has-pick');
-  $('items').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-  $('form').hidden = false; $('form-error').textContent = '';
-  $('value-label').textContent = `${it.label} 기록`; $('unit').textContent = it.unit;
-  $('minus').hidden = it.min >= 0; $('value').value = ''; $('value').focus();
+  $('items').hidden = true; $('rec-title').textContent = it.label;
+  $('form').hidden = false; $('form').dataset.item = it.key; $('form-error').textContent = '';
+  $('value-label').textContent = `${it.label} 기록 (단위: ${it.unit})`; $('unit').textContent = it.unit;
+  $('minus').hidden = it.min >= 0; $('value').value = '';
+  $('pad').querySelector('[data-key="."]').disabled = !decimalsOf(it);
 }
-$('minus').addEventListener('click', () => { const v = $('value'); v.value = v.value.startsWith('-') ? v.value.slice(1) : '-' + v.value; v.focus(); });
+$('pad') && buildPad();
+$('pad').addEventListener('click', (ev) => { const b = ev.target.closest('button[data-key]'); if (b && picked && !b.disabled) press(b.dataset.key); });
+$('minus').addEventListener('click', () => { const v = $('value'); v.value = v.value.startsWith('-') ? v.value.slice(1) : '-' + v.value; });
 
 $('form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
@@ -138,7 +160,7 @@ $('go-mine').addEventListener('click', () => { renderMine(); view('mine'); });
 $('to-mine').addEventListener('click', () => { renderMine(); view('mine'); });
 $('again').addEventListener('click', () => { renderItems(); view('record'); });
 $('logout').addEventListener('click', logout);
-root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => view('home')));
+root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { if (b.closest('[data-view=record]') && !$('form').hidden) renderItems(); else view('home'); }));
 
 const tableReady = loadTable();
 const devId = DEV && new URLSearchParams(location.search).get('id');

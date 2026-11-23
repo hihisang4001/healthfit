@@ -117,3 +117,22 @@ body[data-view=record] #form #save{margin-top:4px}
 .items.has-pick button[data-item][aria-pressed=false]{opacity:.55}
 body[data-view=record] .items.has-pick button{font-size:clamp(20px,4.6vmin,48px);line-height:1.1;gap:2px}
 body[data-view=record] .items.has-pick button .muted{font-size:.6em}
+
+/* 숫자 키패드 입력 화면 */
+body[data-view=record] #form{flex:1;min-height:0;padding:var(--gap);gap:var(--gap);background:var(--card)}
+body[data-view=record] #form[hidden]{display:none}
+body[data-view=record] #value-label{background:var(--c,var(--track));color:#fff;border-radius:18px;padding:12px 16px;text-align:center;font-family:var(--display);font-weight:400;font-size:clamp(24px,6vmin,56px);line-height:1.2}
+#form[data-item=shuttle_run]{--c:#1E7BD8}#form[data-item=curl_up]{--c:#2E9E5B}#form[data-item=standing_jump]{--c:#E08A00}#form[data-item=sit_reach]{--c:#7A4CC2}#form[data-item=run50]{--c:#C4432B}
+.disp{display:flex;align-items:center;gap:12px}
+.disp input{flex:1;text-align:center;font-family:var(--display);font-size:clamp(44px,12vmin,120px);min-height:0;padding:6px 10px;border-radius:18px;border:3px solid var(--rule);background:var(--paper);caret-color:transparent}
+.disp #unit{font-family:var(--display);font-size:clamp(26px,6vmin,60px);color:var(--ink-soft)}
+body[data-view=record] .disp #minus{font-size:clamp(32px,8vmin,80px);padding:6px 22px;border-radius:18px}
+.pad{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:var(--gap)}
+.pad button{min-height:0;border-radius:20px;font-family:var(--display);font-size:clamp(40px,11vmin,110px);background:var(--paper);border:2px solid var(--rule);box-shadow:0 4px 0 var(--rule);padding:0;color:var(--ink)}
+.pad button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--rule);background:var(--turf-soft)}
+.pad button:disabled{opacity:.3}
+.pad button[data-key="⌫"]{color:var(--bad)}
+body[data-view=record] #form #save{flex:none;min-height:0;font-size:clamp(34px,8vmin,84px);padding:16px;margin:0}
+body[data-view=record] #form .error{flex:none}
+.pad button.del{font-size:clamp(26px,6.4vmin,64px);color:var(--bad)}
+.disp #unit{font-family:var(--body);font-weight:900;min-width:1.6em}
