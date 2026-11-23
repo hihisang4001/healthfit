@@ -211,7 +211,7 @@ $('logout').addEventListener('click', logout);
 root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { if (b.closest('[data-view=record]') && !$('form').hidden) renderItems(); else view('home'); }));
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '202611240005';
+const BUILD = '1';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
