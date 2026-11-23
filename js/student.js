@@ -78,9 +78,9 @@ function press(k) {
 }
 function pick(it, btn) {
   picked = it;
-  $('items').hidden = true; $('rec-title').textContent = it.label;
+  $('items').hidden = true; $('rec-title').textContent = '';
   $('form').hidden = false; $('form').dataset.item = it.key; $('form-error').textContent = '';
-  $('value-label').textContent = `${it.label} 기록 (단위: ${it.unit})`; $('unit').textContent = it.unit;
+  $('value-label').replaceChildren(it.label, el('small', {}, `단위: ${it.unit}`)); $('unit').textContent = it.unit;
   $('minus').hidden = it.min >= 0; $('value').value = '';
   $('pad').querySelector('[data-key="."]').disabled = !decimalsOf(it);
 }
