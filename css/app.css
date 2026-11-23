@@ -159,3 +159,20 @@ body[data-view=result] .result .big{font-size:clamp(36px,8vmin,100px)}
 body[data-view=result] .result h2{font-size:clamp(24px,4.6vmin,52px)}
 body[data-view=result] .result p{font-size:clamp(18px,3.2vmin,34px)}
 body[data-view=result] .blocks.short{flex:0 0 24%}
+/* 입력된 숫자: 키패드 숫자보다 훨씬 크게 */
+.disp input{font-size:clamp(80px,24vmin,240px);line-height:1;padding:0 12px;height:clamp(110px,28vmin,280px);color:var(--ink)}
+.disp #unit{font-size:clamp(30px,8vmin,80px)}
+.pad button{font-size:clamp(34px,8.5vmin,90px)}
+body[data-view=record] #form #value-label{font-size:clamp(40px,10.5vmin,110px)}
+@media (orientation:landscape){
+  .disp input{font-size:clamp(60px,15vmin,150px);height:clamp(80px,19vmin,180px)}
+  .pad button{font-size:clamp(24px,5.5vmin,60px)}
+  body[data-view=record] #form #value-label{font-size:clamp(28px,6.5vmin,64px)}
+}
+body[data-view=record] #form .disp input{font-size:clamp(84px,21vmin,220px);height:clamp(100px,22vmin,230px);padding:0 10px;line-height:1}
+body[data-view=record] #form .pad button{font-size:clamp(30px,7.5vmin,80px);display:flex;align-items:center;justify-content:center;line-height:1}
+body[data-view=record] #form .pad button.del{font-size:clamp(24px,5.6vmin,60px)}
+@media (orientation:landscape){
+  body[data-view=record] #form .disp input{font-size:clamp(56px,13vmin,130px);height:clamp(70px,16vmin,160px)}
+  body[data-view=record] #form .pad button{font-size:clamp(22px,5vmin,56px)}
+}
