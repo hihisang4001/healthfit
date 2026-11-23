@@ -286,3 +286,5 @@ body[data-view=result] .result .next-tier b{white-space:nowrap}
 .dlg{position:relative}
 .dlg-x{position:absolute;top:2vmin;right:2vmin;min-height:0;width:auto;padding:1.4vmin 3vmin;border-radius:16px;font-size:clamp(18px,3.2vmin,30px);font-family:var(--display);font-weight:400;background:#EEF2F8;color:var(--ink);box-shadow:none}
 #undone .dlg p{margin-top:6vmin}
+
+.mute{min-height:0;width:auto;padding:.3em .55em;border-radius:999px;border:2px solid rgba(255,255,255,.55);background:transparent;color:#fff;font-size:1rem;line-height:1;box-shadow:none}

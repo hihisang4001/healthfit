@@ -1,6 +1,7 @@
 import { api, onNet } from './api.js';
 import { makeStore, newCid } from './offline.js';
 import { DEV, ITEMS } from './config.js';
+import { playTier, unlock, isMuted, setMuted } from './sound.js';
 import { tierFor, bestOfDay, gradeKey, isImplausible } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
 import { startScan, normalize } from './qr.js';
@@ -216,6 +217,7 @@ function showResult(rec, pending = false) {
   box.append(el('p', { id: 'save-state', class: 'muted' }, pending ? '저장하는 중…' : ''));
   const ub = $('undo'); ub.hidden = false; ub.disabled = false; ub.textContent = '잘못 입력했어요';   // 취소 버튼은 '내 기록 보기' 옆의 큰 버튼
   view('result'); startResultTimer();
+  if (t) playTier(t.index);
 }
 
 function chart(item, pts) {
@@ -298,7 +300,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '19';
+const BUILD = '20';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
@@ -317,3 +319,8 @@ if ('serviceWorker' in navigator && noSw) {
 await tableReady;
 // 앱스크립트 서버를 미리 깨워 둔다(처음 요청이 느린 것을 줄임)
 api.warm();
+
+// 효과음: 첫 터치에서 소리를 깨우고, 상단 스피커 버튼으로 끄고 켠다
+document.addEventListener('pointerdown', unlock, { once: true });
+{ const b = $('mute'); const paint = () => { b.textContent = isMuted() ? '🔇' : '🔊'; b.setAttribute('aria-label', isMuted() ? '효과음 꺼짐' : '효과음 켜짐'); };
+  paint(); b.onclick = () => { setMuted(!isMuted()); paint(); if (!isMuted()) playTier(3); }; }
