@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>건강체력 증진 도우미 · QR 카드</title>
+<meta name="theme-color" content="#1F5FBF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=21">
+</head>
+<body>
+<header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="index.html">체크</a><a href="cards.html" class="on">QR 카드</a><a href="teacher.html">교사용</a></header>
+<main id="app">
+  <section data-view="login" id="cards-login">
+    <h1>QR 카드</h1>
+    <form id="login" class="card">
+      <label for="pin">교사용 비밀번호</label>
+      <input id="pin" type="password" autocomplete="off" inputmode="numeric">
+      <p class="error" id="login-error" role="alert"></p>
+      <button class="primary">들어가기</button>
+    </form>
+  </section>
+
+  <section data-view="cards" id="v-cards" hidden>
+    <div class="cards-tools">
+      <p>카드 한 장은 85×55mm예요. A4 한 장에 10명씩 인쇄돼요. 인쇄 창의 배율은 "기본값(100%)"으로 두세요. 점선대로 잘라 코팅하고 목걸이 줄에 거세요. 명단의 번호를 바꾸지 않으면 다시 인쇄할 필요가 없어요.</p>
+      <button type="button" id="printBtn">인쇄하기</button>
+      <button type="button" id="phoneBtn" class="phone-chip">📱 휴대폰으로 보기</button>
+    </div>
+    <!-- 휴대폰으로 보기: 카드를 잃어버린 학생에게 휴대폰 화면의 QR 카드를 바로 찍게 (가로 전체 화면) -->
+    <div class="pview" id="phoneView" hidden>
+      <aside class="pv-list">
+        <button type="button" class="pv-close" id="pvClose">✕ 닫기</button>
+        <div class="pv-hint" id="pvHint">☀ 화면 밝기를 최대로 올리면 더 잘 찍혀요</div>
+        <div class="pv-names" id="pvNames"></div>
+      </aside>
+      <div class="pv-stage">
+        <div class="pv-card" id="pvCard"></div>
+      </div>
+    </div>
+    <!-- 인쇄할 학생 고르기 (카드를 잃어버린 학생만 다시 뽑을 때) -->
+    <div class="pick" id="cardPick" hidden>
+      <div class="pick-head">
+        <b>인쇄할 학생</b>
+        <span class="pick-n num" id="pickCount"></span>
+        <button type="button" class="t-btn" id="pickAll">모두 선택</button>
+        <button type="button" class="t-btn" id="pickNone">모두 해제</button>
+      </div>
+      <div class="pick-groups" id="pickGroups"></div>
+    </div>
+    <p class="error" id="cards-error" role="alert"></p>
+    <div class="sheet" id="cardSheet"></div>
+  </section>
+</main>
+<script src="js/vendor/qrcode.min.js"></script>
+<script type="module" src="js/cards.js?v=21"></script>
+</body>
+</html>
