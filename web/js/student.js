@@ -25,7 +25,7 @@ async function login(id) {
   me = { id: normalize(id), name: '', grade: 0, sex: '', records: [], loading: true };
   $('hello').textContent = '불러오는 중…';
   $('go-record').disabled = $('go-mine').disabled = true;
-  view('home');
+  view('loading');
   try { scanner && scanner.pause && scanner.pause(true); } catch (e) {}
   try {
     const d = await api.studentMe(id);
@@ -33,6 +33,7 @@ async function login(id) {
     Object.assign(me, { name: d.name, grade: d.grade, sex: d.sex, records: d.records, peers: d.peers || {}, loading: false });
     $('hello').textContent = `${me.name} (${me.grade}학년)`;
     $('go-record').disabled = $('go-mine').disabled = false;
+    view('home');
   } catch (e) {
     me = null; $('scan-error').textContent = e.message; view('scan'); resumeScanner();
   }
