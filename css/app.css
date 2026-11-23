@@ -141,3 +141,10 @@ body[data-view=record] #value-label{font-size:clamp(44px,11.5vmin,120px);line-he
 body[data-view=record] #value-label small{font-size:.42em;opacity:.95}
 body[data-view=record] #form #value-label{font-size:clamp(48px,13vmin,130px);line-height:1.1;color:#fff}
 body[data-view=record] #form #value-label small{font-size:.4em}
+@media (orientation:landscape){
+  body[data-view=record] #form #value-label{font-size:clamp(30px,7vmin,72px);padding:1vmin 16px}
+  body[data-view=record] #form #value-label small{font-size:.45em}
+  .disp input{font-size:clamp(34px,8vmin,80px)}
+  .pad button{font-size:clamp(26px,6vmin,64px)}
+  body[data-view=record] #form #save{font-size:clamp(26px,5vmin,56px);padding:8px}
+}
