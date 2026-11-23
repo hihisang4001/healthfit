@@ -1,5 +1,5 @@
-/* 아침 건강달리기와 같은 계열: 밝은 바탕, 붉은 트랙색 상단바, 잔디 초록 포인트, 큰 글씨 */
-:root{--track:#C4432B;--track-deep:#932F1C;--turf:#22704A;--turf-soft:#E4F0E8;--ink:#1C2420;--ink-soft:#5A6660;--paper:#F5F6F2;--card:#fff;--rule:#D9E0DA;--ok:#178A48;--bad:#C62828;--warn:#E2A400;
+/* 밝은 바탕, 파란색 상단바와 버튼, 잔디 초록 포인트, 큰 글씨 */
+:root{--track:#1F5FBF;--track-deep:#143F82;--turf:#22704A;--turf-soft:#E4F0E8;--ink:#1C2420;--ink-soft:#5A6660;--paper:#F5F6F2;--card:#fff;--rule:#D9E0DA;--ok:#178A48;--bad:#C62828;--warn:#E2A400;
 --display:'Black Han Sans','Noto Sans KR','Malgun Gothic',sans-serif;--body:'Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
@@ -251,3 +251,34 @@ body[data-view=result] .blocks.short button.danger{background:#FDECEC;color:var(
 body[data-view=result] .blocks.short button[hidden]{display:none}
 body[data-view=result] .blocks.short #undo{font-size:clamp(24px,5.5vmin,64px);padding:8px;margin:0;border-radius:22px;min-height:0}
 @media (orientation:portrait){body[data-view=result] .blocks.short #undo{font-size:clamp(26px,7vmin,70px)}}
+
+/* 인터넷·전송 상태 */
+.net{font-size:14px;font-weight:700;background:rgba(255,255,255,.95);color:var(--ink);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.net::before{content:'';display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:-1px;background:#1E8A4C}
+.net[data-state=off]::before{background:#E08A00}.net[data-state=sync]::before{background:#1F5FBF}.net[data-state=fail]::before{background:#C62828}
+.net[data-state=fail]{color:#C62828}
+.result .pending{color:#B26A00;font-weight:700}
+
+/* 작은 화면(휴대폰): 상단 줄이 두 줄로 깨지지 않게 */
+.topbar .brand{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 0}
+.topbar a{white-space:nowrap;flex:none}
+.net{flex:none;max-width:46vw;overflow:hidden;text-overflow:ellipsis}
+body[data-view=result] .result .next-tier b{white-space:nowrap}
+@media (max-width:520px){
+  .topbar{gap:8px;padding:12px 10px}
+  .topbar .brand{font-size:18px}
+  .topbar a{padding:5px 10px;font-size:13px}
+  .net{font-size:12px;padding:4px 9px;max-width:50vw}
+}
+/* 키가 작은 화면(작은 휴대폰 등): 키패드와 저장 버튼이 겹치지 않게 줄여서 배치 */
+@media (max-height:720px) and (orientation:portrait){
+  body[data-view=record] main{padding:6px}
+  body[data-view=record] .row .ghost,body[data-view=record] button[data-back]{min-height:0;padding:4px 14px;font-size:18px;border-radius:12px}
+  body[data-view=record] #form{gap:6px;padding:8px}
+  body[data-view=record] #form #value-label{font-size:30px;padding:6px 10px;gap:0}
+  body[data-view=record] #form #value-label small{font-size:.45em}
+  body[data-view=record] #form .disp input{font-size:48px;height:60px}
+  .pad{gap:6px}
+  body[data-view=record] #form .pad button{font-size:28px;border-radius:14px}
+  body[data-view=record] #form #save{font-size:26px;padding:8px}
+}

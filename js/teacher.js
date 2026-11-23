@@ -3,6 +3,7 @@ import { ITEMS } from './config.js';
 import { TIERS, tierFor, latestBest, gradeKey } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
 import { bestOfDay } from './tiers.js';
+import { makeStore } from './offline.js';
 
 const root = document.getElementById('app');
 const $ = (id) => document.getElementById(id);
@@ -112,6 +113,16 @@ $('promote').addEventListener('click', async () => {
   try { const r = await api.teacherPromote(pin); await load(); renderDash(); $('dash-error').textContent = ''; $('dash-note').textContent = `진급 ${r.promoted}명, 졸업 ${r.graduated}명 처리했어요.`; }
   catch (e) { $('dash-error').textContent = e.message; }
 });
+$('offline-prep').addEventListener('click', () => {
+  // 학생 명단과 기록을 이 태블릿에만 저장해, 인터넷이 없어도 학생이 QR로 입장할 수 있게 한다
+  try {
+    const map = {};
+    for (const s of roster) map[s.id] = { name: s.name, grade: s.grade, sex: s.sex, records: records.filter((r) => r.id === s.id) };
+    const ok = makeStore(window.localStorage).cachePutMany(map);
+    $('dash-error').textContent = ok ? '' : '저장 공간이 부족해요.';
+    $('dash-note').textContent = ok ? `학생 ${roster.length}명을 이 태블릿에 저장했어요. 이제 인터넷이 끊겨도 기록할 수 있어요.` : '';
+  } catch (e) { $('dash-error').textContent = '이 브라우저에서는 저장할 수 없어요.'; }
+});
 function bannerCheck() {
   const m = new Date().getMonth() + 1, k = 'backup-' + new Date().getFullYear() + '-' + (m >= 12 || m <= 1 ? 'w' : m === 7 ? 's' : '');
   let seen = false; try { seen = !!localStorage.getItem(k); } catch (e) {}
@@ -122,5 +133,5 @@ bannerCheck();
 $('s-back').addEventListener('click', () => { renderDash(); show(root, 'dash'); });
 
 for (const sel of [$('f-item'), $('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, it.label));
-$('ver').textContent = 'v13';
+$('ver').textContent = 'v15';
 await loadTable();

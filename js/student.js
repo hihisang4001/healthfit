@@ -1,10 +1,12 @@
-import { api } from './api.js';
+import { api, onNet } from './api.js';
+import { makeStore, newCid } from './offline.js';
 import { DEV, ITEMS } from './config.js';
 import { tierFor, bestOfDay, gradeKey, isImplausible } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
 import { startScan, normalize } from './qr.js';
 
 const root = document.getElementById('app');
+const store = makeStore((() => { try { return window.localStorage; } catch (e) { return { getItem() { return null; }, setItem() { throw new Error('저장소 없음'); } }; } })());
 const $ = (id) => document.getElementById(id);
 const IDLE_MS = 60000;
 const RESULT_MS = 10000;
@@ -30,13 +32,23 @@ async function login(id) {
   try {
     const d = await api.studentMe(id);
     if (!me || me.id !== normalize(id)) return;
-    Object.assign(me, { name: d.name, grade: d.grade, sex: d.sex, records: d.records, peers: d.peers || {}, loading: false });
-    $('hello').textContent = `${me.name} (${me.grade}학년)`;
-    $('go-record').disabled = $('go-mine').disabled = false;
-    view('home');
+    store.cachePut(me.id, d);
+    startMe(d);
+    if (store.queue().length) flush();
   } catch (e) {
-    me = null; $('scan-error').textContent = e.message; view('scan'); resumeScanner();
+    if (!me || me.id !== normalize(id)) return;
+    const c = e.offline && store.cacheGet(me.id);
+    if (c) { startMe(c); return; }   // 인터넷이 없어도, 이 기기가 아는 학생이면 이어서 쓴다
+    me = null;
+    $('scan-error').textContent = e.offline ? '인터넷이 끊겨 있고 이 기기에 저장되지 않은 카드예요. 선생님께 알려 주세요.' : e.message;
+    view('scan'); resumeScanner();
   }
+}
+function startMe(d) {
+  Object.assign(me, { name: d.name, grade: d.grade, sex: d.sex, records: [...d.records, ...store.pendingRecords(me.id, d.grade)], peers: d.peers || {}, loading: false });
+  $('hello').textContent = `${me.name} (${me.grade}학년)`;
+  $('go-record').disabled = $('go-mine').disabled = false;
+  view('home');
 }
 function resumeScanner() {
   if (!scanner || scanner === true) return startScanner();
@@ -114,13 +126,21 @@ function askConfirm(msg) {
 async function doSave(raw, n) {
   $('save').disabled = true;
   // 저장 결과를 기다리지 않고 바로 등급 화면을 보여 주고, 저장은 뒤에서 확인한다
-  const rec = { id: me.id, item: picked.key, value: n, grade: me.grade, date: today() };
-  me.records.push(rec);
-  const promise = api.studentAdd(me.id, picked.key, raw).then((d) => {
-    const i = me.records.indexOf(rec); if (i >= 0) me.records[i] = d.record;
-    Object.assign(rec, d.record); setSaved('저장했어요 ✓', false); return d.record;
+  const who = me, key = picked.key, cid = newCid(), date = today();
+  const rec = { id: who.id, item: key, value: n, grade: who.grade, date, cid };
+  who.records.push(rec);
+  const drop = () => { const i = who.records.indexOf(rec); if (i >= 0) who.records.splice(i, 1); };
+  const promise = api.studentAdd(who.id, key, raw, { cid, date }).then((d) => {
+    const i = who.records.indexOf(rec); if (i >= 0) who.records[i] = d.record;
+    Object.assign(rec, d.record); store.cacheAddRecord(who.id, d.record); setSaved('저장했어요 ✓', false); return d.record;
   }).catch((e) => {
-    const i = me.records.indexOf(rec); if (i >= 0) me.records.splice(i, 1);
+    // 인터넷이 끊겼으면 기록을 기기에 담아 두었다가 연결되면 자동으로 보낸다
+    if (e.offline && store.enqueue({ cid, id: who.id, item: key, value: raw, date })) {
+      rec.pending = true; pendingRecs.set(cid, rec);
+      setSaved('인터넷이 끊겨 기기에 저장했어요. 연결되면 자동으로 보내요', false, 'pending'); setNet();
+      return { pending: true, cid };
+    }
+    drop();
     stopResultTimer(); setSaved(`저장하지 못했어요. ${e.message} 다시 기록해 주세요.`, true); $('undo') && ($('undo').hidden = true); return null;
   });
   lastSave = { rec, promise };
@@ -129,7 +149,7 @@ async function doSave(raw, n) {
 }
 $('value').addEventListener('input', resetAsk);
 function resetAsk() { askedFor = null; $('save').textContent = '저장하기'; }
-function setSaved(msg, bad) { const p = $('save-state'); if (p) { p.textContent = msg; p.className = bad ? 'error' : (msg.startsWith('저장했어요') ? 'saved' : 'muted'); } }
+function setSaved(msg, bad, kind) { const p = $('save-state'); if (p) { p.textContent = msg; p.className = bad ? 'error' : (kind || (msg.startsWith('저장했어요') ? 'saved' : 'muted')); } }
 
 function stopResultTimer() { clearTimeout(resultTimer); clearInterval(tick); resultTimer = tick = null; }
 function startResultTimer() {
@@ -146,14 +166,22 @@ async function undoLast() {
   const b = $('undo'); b.disabled = true; b.textContent = '취소하는 중…';
   const saved = await lastSave.promise;
   if (!saved) return;
+  const rec = lastSave.rec, itemKey = rec.item;
   try {
-    await api.studentUndo(me.id, saved.recordId);
-    const i = me.records.findIndex((r) => r.recordId === saved.recordId); if (i >= 0) me.records.splice(i, 1);
-    const itemKey = lastSave.rec.item;
+    if (saved.pending && store.removeQueued(saved.cid)) {
+      pendingRecs.delete(saved.cid);   // 아직 보내지 않은 기록은 기기에서 지우면 끝
+      setNet();
+    } else {
+      const recordId = saved.recordId || rec.recordId;
+      if (!recordId) throw new Error('방금 보낸 기록을 찾지 못했어요. 선생님께 말씀해 주세요.');
+      await api.studentUndo(me.id, recordId);
+      store.cacheRemoveRecord(me.id, recordId);
+    }
+    const i = me.records.indexOf(rec); if (i >= 0) me.records.splice(i, 1);
     lastSave = null; renderItems(); view('record');
     $('rec-title').textContent = '취소했어요. 다시 골라요';
     askUndone(itemKey);
-  } catch (e) { setSaved(e.message, true); b.hidden = true; }
+  } catch (e) { setSaved(e.offline ? '인터넷이 끊겨서 지금은 취소할 수 없어요. 선생님께 말씀해 주세요.' : e.message, true); b.hidden = true; }
 }
 // 취소 완료 팝업: '다시 기록하기'는 방금 고른 종목의 입력 화면으로 바로 간다
 function askUndone(itemKey) {
@@ -218,8 +246,50 @@ $('undo').addEventListener('click', undoLast);
 $('logout').addEventListener('click', logout);
 root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { if (b.closest('[data-view=record]') && !$('form').hidden) renderItems(); else view('home'); }));
 
+// ---------- 인터넷 연결·전송 상태 표시, 끊겼을 때 쌓인 기록 자동 전송 ----------
+const pendingRecs = new Map();
+let netOk = navigator.onLine !== false, flushing = false, sentAt = 0;
+function setNet() {
+  const n = $('net'); if (!n) return;
+  const q = store.queue().length, f = store.failed().length, online = netOk && navigator.onLine !== false;
+  let state, text;
+  if (f) { state = 'fail'; text = `전송 실패 ${f}건 · 선생님께 알려 주세요`; }
+  else if (!online) { state = 'off'; text = q ? `인터넷 끊김 · 전송 대기 ${q}건` : '인터넷 끊김 · 기록은 기기에 저장돼요'; }
+  else if (flushing || q) { state = 'sync'; text = `전송 중 · ${q}건`; }
+  else if (Date.now() - sentAt < 6000) { state = 'ok'; text = '전송 완료 ✓'; }
+  else { state = 'ok'; text = '인터넷 연결됨'; }
+  n.dataset.state = state; n.textContent = text;
+}
+function onSent(it, record) {
+  const rec = pendingRecs.get(it.cid);
+  if (rec) { Object.assign(rec, record); delete rec.pending; pendingRecs.delete(it.cid); if (lastSave && lastSave.rec === rec) setSaved('저장했어요 ✓', false); }
+  store.cacheAddRecord(it.id, record);
+}
+async function flush() {
+  if (flushing) return;
+  flushing = true; setNet();
+  try {
+    for (;;) {
+      const it = store.queue()[0]; if (!it) break;
+      try {
+        const d = await api.studentAdd(it.id, it.item, it.value, { cid: it.cid, date: it.date });
+        store.removeQueued(it.cid); onSent(it, d.record); sentAt = Date.now(); setTimeout(setNet, 6100);
+      } catch (e) {
+        if (e.offline) break;
+        store.markFailed(it, e.message);   // 서버가 거절한 기록은 따로 보관하고 다음 기록으로 넘어간다
+      }
+    }
+  } finally { flushing = false; setNet(); }
+}
+onNet((ok) => { netOk = ok; setNet(); if (ok && !flushing && store.queue().length) flush(); });
+window.addEventListener('online', () => { netOk = true; setNet(); flush(); });
+window.addEventListener('offline', () => { netOk = false; setNet(); });
+setInterval(() => { if (store.queue().length) flush(); else if (!netOk) api.ping().catch(() => {}); }, 15000);
+setNet();
+if (DEV) { window.__login = login; window.__flush = flush; }
+
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '13';
+const BUILD = '15';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
@@ -227,6 +297,7 @@ fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json(
 const tableReady = loadTable();
 const devId = DEV && new URLSearchParams(location.search).get('id');
 if (devId) { await tableReady; login(devId); } else startScanner();
+if ('serviceWorker' in navigator && !devId) navigator.serviceWorker.register('sw.js').catch(() => {});   // 인터넷이 없어도 앱 화면이 열리게 기기에 보관
 await tableReady;
 // 앱스크립트 서버를 미리 깨워 둔다(처음 요청이 느린 것을 줄임)
 api.warm();

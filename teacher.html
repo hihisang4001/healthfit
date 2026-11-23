@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>건강체력 증진 도우미 · 교사용</title>
-<meta name="theme-color" content="#C4432B">
+<meta name="theme-color" content="#1F5FBF">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=13">
+<link rel="stylesheet" href="css/app.css?v=15">
 </head>
 <body>
 <header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="index.html">학생용</a></header>
@@ -33,6 +33,7 @@
     <div class="card"><h2>등급 분포</h2><div class="bars" id="bars"></div><div class="legend" id="legend"></div></div>
     <div class="card" style="overflow:auto"><table id="table"></table></div>
     <div class="card row"><span class="grow muted">새 학년이 되면 전체 학년을 한 칸씩 올립니다. 6학년은 졸업 처리되고 기록은 시트에 남습니다.</span><button class="danger" id="promote">학년 올리기</button></div>
+    <div class="card row"><span class="grow muted">인터넷이 불안정한 곳에서 쓸 태블릿이라면, 수업 전에 한 번 눌러서 학생 명단을 이 태블릿에 저장해 두세요. (이 태블릿에만 저장됩니다)</span><button id="offline-prep">오프라인 준비</button></div>
     <p class="muted" id="dash-note" role="status"></p>
     <p class="error" id="dash-error" role="alert"></p>
   </section>
@@ -50,7 +51,7 @@
     <div class="card" style="overflow:auto"><table id="s-table"></table></div>
   </section>
 </main>
-<script type="module" src="js/teacher.js?v=13"></script>
+<script type="module" src="js/teacher.js?v=15"></script>
 <div class="ver-foot" id="ver"></div>
 </body>
 </html>
