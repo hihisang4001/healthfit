@@ -14,6 +14,7 @@ async function call(body) {
 export const api = {
   warm: () => { if (url) fetch(url).catch(() => {}); },
   studentMe: (id) => call({ action: 'student.me', id }),
+  studentUndo: (id, recordId) => call({ action: 'student.undo', id, recordId }),
   studentAdd: (id, item, value) => call({ action: 'student.add', id, item, value }),
   teacherList: (pin) => call({ action: 'teacher.list', pin }),
   teacherAdd: (pin, { id, date, item, value }) => call({ action: 'teacher.add', pin, id, date, item, value }),

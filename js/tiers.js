@@ -44,3 +44,10 @@ export function latestBest(records, item) {
   const mine = bestOfDay(records.filter((r) => r.item === item)).sort((a, b) => b.date.localeCompare(a.date));
   return mine[0] || null;
 }
+
+// 입력값이 챌린저 기준의 1.5배를 넘으면(50M는 1/1.5보다 빠르면) 한 번 더 확인
+export function isImplausible(item, key, value) {
+  const cut = key && table && table.cutoffs[item] && table.cutoffs[item][key] && table.cutoffs[item][key]['챌린저'];
+  if (!(cut > 0)) return false;
+  return LOWER_IS_BETTER.has(item) ? value < cut / 1.5 : value > cut * 1.5;
+}

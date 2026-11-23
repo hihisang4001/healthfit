@@ -148,3 +148,14 @@ body[data-view=record] #form #value-label small{font-size:.4em}
   .pad button{font-size:clamp(26px,6vmin,64px)}
   body[data-view=record] #form #save{font-size:clamp(26px,5vmin,56px);padding:8px}
 }
+
+.peer{display:flex;align-items:center;justify-content:center;gap:12px;font-size:clamp(20px,3.6vmin,38px);font-weight:700;color:var(--ink-soft)}
+.peer b{color:var(--ink);font-family:var(--display);font-weight:400}
+#undo{font-size:clamp(22px,4.4vmin,48px);min-height:0;padding:10px 24px;border-radius:18px;margin-top:1vmin;font-family:var(--display)}
+body[data-view=result] .result .badge{width:min(22vmin,220px);height:min(22vmin,220px)}
+body[data-view=result] .result .peer .badge{width:min(9vmin,84px);height:min(9vmin,84px)}
+body[data-view=result] .card.result{gap:.6vmin}
+body[data-view=result] .result .big{font-size:clamp(36px,8vmin,100px)}
+body[data-view=result] .result h2{font-size:clamp(24px,4.6vmin,52px)}
+body[data-view=result] .result p{font-size:clamp(18px,3.2vmin,34px)}
+body[data-view=result] .blocks.short{flex:0 0 24%}

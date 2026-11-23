@@ -1,13 +1,14 @@
 import { api } from './api.js';
 import { DEV, ITEMS } from './config.js';
-import { tierFor, bestOfDay, gradeKey } from './tiers.js';
+import { tierFor, bestOfDay, gradeKey, isImplausible } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
 import { startScan, normalize } from './qr.js';
 
 const root = document.getElementById('app');
 const $ = (id) => document.getElementById(id);
 const IDLE_MS = 60000;
-let me = null, idleTimer = null, picked = null, scanner = null;
+const RESULT_MS = 10000;
+let me = null, idleTimer = null, picked = null, scanner = null, resultTimer = null, tick = null, lastSave = null, askedFor = null;
 const itemOf = (key) => ITEMS.find((i) => i.key === key);
 const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
 
@@ -29,7 +30,7 @@ async function login(id) {
   try {
     const d = await api.studentMe(id);
     if (!me || me.id !== normalize(id)) return;
-    Object.assign(me, { name: d.name, grade: d.grade, sex: d.sex, records: d.records, loading: false });
+    Object.assign(me, { name: d.name, grade: d.grade, sex: d.sex, records: d.records, peers: d.peers || {}, loading: false });
     $('hello').textContent = `${me.name} (${me.grade}학년)`;
     $('go-record').disabled = $('go-mine').disabled = false;
   } catch (e) {
@@ -41,7 +42,7 @@ function resumeScanner() {
   try { scanner.resume(); } catch (e) {}
   scanner.__ready && scanner.__ready();
 }
-function logout() { me = null; picked = null; clearTimeout(idleTimer); view('scan'); resumeScanner(); }
+function logout() { stopResultTimer(); me = null; picked = null; clearTimeout(idleTimer); view('scan'); resumeScanner(); }
 async function startScanner() {
   if (scanner) return;
   scanner = true;
@@ -64,6 +65,7 @@ function buildPad() {
   for (const k of keys) pad.append(el('button', { type: 'button', 'data-key': k, class: k === '⌫' ? 'del' : '', 'aria-label': k === '⌫' ? '지우기' : k === '.' ? '소수점' : k }, k === '⌫' ? '지우기' : k));
 }
 function press(k) {
+  resetAsk();
   const v = $('value'); let t = v.value; $('form-error').textContent = '';
   const dec = decimalsOf(picked);
   if (k === '⌫') t = t.slice(0, -1);
@@ -81,36 +83,67 @@ function pick(it, btn) {
   $('items').hidden = true; $('rec-title').textContent = '';
   $('form').hidden = false; $('form').dataset.item = it.key; $('form-error').textContent = '';
   $('value-label').replaceChildren(it.label, el('small', {}, `단위: ${it.unit}`)); $('unit').textContent = it.unit;
-  $('minus').hidden = it.min >= 0; $('value').value = '';
+  resetAsk(); $('minus').hidden = it.min >= 0; $('value').value = '';
   $('pad').querySelector('[data-key="."]').disabled = !decimalsOf(it);
 }
 $('pad') && buildPad();
 $('pad').addEventListener('click', (ev) => { const b = ev.target.closest('button[data-key]'); if (b && picked && !b.disabled) press(b.dataset.key); });
-$('minus').addEventListener('click', () => { const v = $('value'); v.value = v.value.startsWith('-') ? v.value.slice(1) : '-' + v.value; });
+$('minus').addEventListener('click', () => { resetAsk(); const v = $('value'); v.value = v.value.startsWith('-') ? v.value.slice(1) : '-' + v.value; });
 
 $('form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const raw = $('value').value.trim().replace(',', '.');
   const n = Number(raw);
-  if (raw === '' || !/^-?\d+(\.\d+)?$/.test(raw)) { $('form-error').textContent = '숫자로 입력해 주세요.'; return; }
+  if (raw === '' || !/^-?\d+(\.\d+)?$/.test(raw)) { $('form-error').textContent = '숫자를 눌러 입력해 주세요.'; return; }
   if (n < picked.min || n > picked.max) { $('form-error').textContent = `${picked.min}부터 ${picked.max} 사이의 숫자를 입력해 주세요.`; return; }
+  // 평소와 크게 다른 값: 같은 값으로 한 번 더 누르면 저장
+  if (isImplausible(picked.key, gradeKey(me.grade, me.sex), n) && askedFor !== `${picked.key}|${raw}`) {
+    askedFor = `${picked.key}|${raw}`;
+    $('form-error').textContent = `정말 ${raw}${picked.unit}가 맞아요? 맞으면 한 번 더 눌러요.`;
+    $('save').textContent = '네, 맞아요';
+    return;
+  }
   $('save').disabled = true;
   // 저장 결과를 기다리지 않고 바로 등급 화면을 보여 주고, 저장은 뒤에서 확인한다
   const rec = { id: me.id, item: picked.key, value: n, grade: me.grade, date: today() };
-  const before = me.records.length;
   me.records.push(rec);
-  showResult(rec, true);
-  try {
-    const d = await api.studentAdd(me.id, picked.key, raw);
+  const promise = api.studentAdd(me.id, picked.key, raw).then((d) => {
     const i = me.records.indexOf(rec); if (i >= 0) me.records[i] = d.record;
-    setSaved('저장했어요 ✓', false);
-  } catch (e) {
+    Object.assign(rec, d.record); setSaved('저장했어요 ✓', false); return d.record;
+  }).catch((e) => {
     const i = me.records.indexOf(rec); if (i >= 0) me.records.splice(i, 1);
-    setSaved(`저장하지 못했어요. ${e.message} 다시 기록해 주세요.`, true);
-  } finally { $('save').disabled = false; }
+    stopResultTimer(); setSaved(`저장하지 못했어요. ${e.message} 다시 기록해 주세요.`, true); $('undo') && ($('undo').hidden = true); return null;
+  });
+  lastSave = { rec, promise };
+  showResult(rec, true);
+  promise.finally(() => { $('save').disabled = false; });
 });
+$('value').addEventListener('input', resetAsk);
+function resetAsk() { askedFor = null; $('save').textContent = '저장하기'; }
 function setSaved(msg, bad) { const p = $('save-state'); if (p) { p.textContent = msg; p.className = bad ? 'error' : 'muted'; } }
 
+function stopResultTimer() { clearTimeout(resultTimer); clearInterval(tick); resultTimer = tick = null; }
+function startResultTimer() {
+  stopResultTimer();
+  let left = Math.round(RESULT_MS / 1000);
+  const label = () => { const b = $('undo'); if (b) b.textContent = `잘못 입력했어요 (${left})`; };
+  label();
+  tick = setInterval(() => { left -= 1; label(); }, 1000);
+  resultTimer = setTimeout(logout, RESULT_MS);   // 10초 뒤 다음 학생을 위해 처음 화면으로
+}
+async function undoLast() {
+  if (!lastSave) return;
+  stopResultTimer();
+  const b = $('undo'); b.disabled = true; b.textContent = '취소하는 중…';
+  const saved = await lastSave.promise;
+  if (!saved) return;
+  try {
+    await api.studentUndo(me.id, saved.recordId);
+    const i = me.records.findIndex((r) => r.recordId === saved.recordId); if (i >= 0) me.records.splice(i, 1);
+    lastSave = null; renderItems(); view('record');
+    $('rec-title').textContent = '취소했어요. 다시 골라요';
+  } catch (e) { setSaved(e.message, true); b.hidden = true; }
+}
 function showResult(rec, pending = false) {
   const it = itemOf(rec.item), t = tierOf(rec), box = $('result'); box.replaceChildren();
   box.append(el('h2', {}, `${it.label} ${fmt(rec.item, rec.value)}${it.unit}`));
@@ -119,11 +152,15 @@ function showResult(rec, pending = false) {
   } else {
     box.append(badge(t.index), el('div', { class: 'big' }, t.tier));
     box.append(el('p', {}, t.next ? `${t.next.tier}까지 ${t.next.needed}${it.unit} ${rec.item === 'run50' ? '더 빨리' : '더'} 필요해요!` : '가장 높은 등급이에요! 대단해요!'));
+    const pm = me.peers && me.peers[rec.item], pt = pm && tierFor(rec.item, gradeKey(me.grade, me.sex), pm.mean);
+    box.append(pt ? el('div', { class: 'peer' }, '같은 학년·성별 친구 평균', badge(pt.index, true), el('b', {}, pt.tier))
+      : el('p', { class: 'muted' }, '아직 비교할 친구가 부족해요.'));
   }
   const best = bestOfDay(me.records.filter((r) => r.id === me.id && r.item === rec.item && r.date === rec.date))[0];
   if (best && best.value !== rec.value) box.append(el('p', { class: 'muted' }, `오늘의 최고 기록은 ${fmt(rec.item, best.value)}${it.unit}이에요.`));
   box.append(el('p', { id: 'save-state', class: 'muted' }, pending ? '저장하는 중…' : ''));
-  view('result');
+  box.append(el('button', { id: 'undo', type: 'button', class: 'danger', onclick: undoLast }, '잘못 입력했어요'));
+  view('result'); startResultTimer();
 }
 
 function chart(item, pts) {
@@ -157,6 +194,8 @@ function renderMine() {
 
 $('go-record').addEventListener('click', () => { renderItems(); view('record'); });
 $('go-mine').addEventListener('click', () => { renderMine(); view('mine'); });
+$('to-mine').addEventListener('click', stopResultTimer, true);
+$('again').addEventListener('click', stopResultTimer, true);
 $('to-mine').addEventListener('click', () => { renderMine(); view('mine'); });
 $('again').addEventListener('click', () => { renderItems(); view('record'); });
 $('logout').addEventListener('click', logout);
