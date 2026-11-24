@@ -6,7 +6,7 @@ import { loadTable, el, badge, show, fmt } from './ui.js';
 import { bestOfDay } from './tiers.js';
 import { makeStore } from './offline.js';
 import { gradeColor, gradeInk } from './grades.js';
-import { LOWER, unitOf, keyLabel, dotEnabled, pressKey, parseEntry, entryText } from './entry.js';
+import { LOWER, unitOf, keyLabel, dotEnabled, pressKey, parseEntry, entryText, TWO_HAND, parseHands, splitLR } from './entry.js';
 import { savePrep, prepLabel } from './autoprep.js';
 import { renderGuide } from './guide.js';
 
@@ -33,6 +33,33 @@ async function load() {
   roster = d.roster; records = d.records; undoInfo = d.undo || null; undoUI();
   savePrep(store, window.localStorage, roster, records); prepUI();   // 받아 올 때마다 이 태블릿에 자동 저장 (오프라인용)
 }
+/* ── 티어 이미지 위에 마우스를 올리거나(태블릿은 길게 누르면) 측정한 날짜를 네모 상자로 보여 준다 ── */
+let tipEl = null, tipHoldUntil = 0, tipTimer = null;
+const dateText = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d)); return m ? `${Number(m[2])}월 ${Number(m[3])}일${m[0] === today() ? '(오늘)' : ''}` : String(d); };
+function tipShow(target, text) {
+  if (!tipEl) { tipEl = el('div', { class: 'tip', role: 'tooltip' }); document.body.append(tipEl); }
+  tipEl.textContent = text; tipEl.hidden = false;
+  const r = target.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  tipEl.style.left = `${Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2))}px`;
+  tipEl.style.top = `${r.top - h - 8 < 8 ? r.bottom + 8 : r.top - h - 8}px`;
+}
+function tipHide() { if (tipEl) tipEl.hidden = true; clearTimeout(tipTimer); }
+function withTip(img, text) {
+  img.setAttribute('aria-label', text); img.title = '';
+  img.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') tipShow(img, text); });
+  img.addEventListener('pointerleave', tipHide);
+  let press = null, fired = false;
+  img.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    fired = false; press = setTimeout(() => { fired = true; tipHoldUntil = Date.now() + 100000; tipShow(img, text); tipTimer = setTimeout(tipHide, 2500); }, 450);
+  });
+  const cancel = () => clearTimeout(press);
+  img.addEventListener('pointerup', () => { cancel(); if (fired) { tipHoldUntil = Date.now() + 400; fired = false; } }); img.addEventListener('pointercancel', () => { cancel(); if (fired) { tipHoldUntil = Date.now() + 400; fired = false; } }); img.addEventListener('pointermove', (e) => { if (!fired) cancel(); });
+  img.addEventListener('contextmenu', (e) => e.preventDefault());
+  return img;
+}
+document.addEventListener('scroll', tipHide, true);
+
 function renderDash() {
   const list = filtered(), table = $('table'); table.replaceChildren();
   table.append(el('tr', {}, el('th', {}, '이름'), el('th', {}, '학년'), ...ITEMS.map((i) => el('th', {}, i.label))));
@@ -40,9 +67,9 @@ function renderDash() {
     const tr = el('tr', {}, el('td', { class: 'name' }, el('button', { class: 'ghost gname', style: `--gc:${gradeColor(s.grade)};--gi:${gradeInk(s.grade)}`, onclick: () => openStudent(s) }, s.name)), el('td', {}, `${s.grade}`));
     for (const it of ITEMS) {
       const { rec, t } = curTier(s, it.key);
-      const open = () => openCell(s, it);
+      const open = () => { if (Date.now() < tipHoldUntil) return; openCell(s, it); };
       tr.append(el('td', { class: 'cell', tabindex: '0', role: 'button', 'aria-label': `${s.name} ${it.label} 기록 입력`, onclick: open, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } },
-        !rec ? el('span', { class: 'plus' }, '＋') : !s.sex ? '성별 필요' : el('div', {}, badge(t.index, true), el('div', { class: 'muted' }, `${fmt(it.key, rec.value)}${it.unit}`))));
+        !rec ? el('span', { class: 'plus' }, '＋') : !s.sex ? '성별 필요' : el('div', {}, withTip(badge(t.index, true), `${TIERS[t.index]} · ${dateText(rec.date)} 측정`), el('div', { class: 'muted' }, `${fmt(it.key, rec.value)}${it.unit}`))));
     }
     table.append(tr);
   }
@@ -50,7 +77,7 @@ function renderDash() {
 function openStudent(s) {
   current = s; $('s-error').textContent = '';
   $('s-title').textContent = `${s.name} (${s.grade}학년${s.sex ? ' ' + s.sex : ', 성별 필요'})`;
-  $('a-date').value = today(); $('a-value').value = '';
+  $('a-date').value = today(); $('a-value').value = ''; $('a-value2').value = ''; addSync();
   renderStudent(); show(root, 'student');
 }
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -85,14 +112,16 @@ function renderStudent() {
   const mine = records.filter((r) => r.id === current.id).sort((a, b) => b.date.localeCompare(a.date));
   for (const r of mine) {
     const it = itemOf(r.item), tier = tierFor(r.item, gradeKey(r.grade, current.sex), r.value);
-    const dateIn = el('input', { type: 'date', value: r.date, 'aria-label': '날짜' }), valIn = el('input', { value: String(r.value), inputmode: 'decimal', 'aria-label': '기록' });
+    const dateIn = el('input', { type: 'date', value: r.date, 'aria-label': '날짜' }), lr = TWO_HAND(it) ? (splitLR(r.lr) || [String(r.value), '']) : null;
+    const valIn = el('input', { value: lr ? lr[0] : String(r.value), inputmode: 'decimal', 'aria-label': lr ? '왼손 기록' : '기록' }), valIn2 = lr ? el('input', { value: lr[1], inputmode: 'decimal', 'aria-label': '오른손 기록', placeholder: '오른손' }) : null;
+    if (lr) valIn.placeholder = '왼손';
     const del = el('button', { class: 'danger' }, '삭제');
     del.addEventListener('click', async () => {
       if (del.dataset.armed !== '1') { del.dataset.armed = '1'; del.textContent = '정말 삭제'; return; }
       await run(() => api.teacherDelete(pin, r.recordId));
     });
-    t.append(el('tr', {}, el('td', {}, dateIn), el('td', {}, it.label), el('td', {}, valIn, ` ${it.mmss ? '초' : it.unit}`), el('td', {}, r.by), el('td', {}, tier ? tier.tier : '–'),
-      el('td', {}, el('button', { onclick: () => run(() => api.teacherUpdate(pin, r.recordId, { value: valIn.value, date: dateIn.value })) }, '수정'), ' ', del)));
+    t.append(el('tr', {}, el('td', {}, dateIn), el('td', {}, it.label), el('td', {}, lr ? ['왼 ', valIn, ' 오 ', valIn2, ` ${it.unit}`] : [valIn, ` ${it.mmss ? '초' : it.unit}`]), el('td', {}, r.by), el('td', {}, tier ? tier.tier : '–'),
+      el('td', {}, el('button', { onclick: () => run(() => api.teacherUpdate(pin, r.recordId, lr ? { value: valIn.value, left: valIn.value, right: valIn2.value, date: dateIn.value } : { value: valIn.value, date: dateIn.value })) }, '수정'), ' ', del)));
   }
   if (!mine.length) t.append(el('tr', {}, el('td', { colspan: 6, class: 'muted' }, '아직 기록이 없어요.')));
 }
@@ -121,7 +150,8 @@ function cellExisting() {
 }
 function cellSync() {
   cellCur.rec = cellExisting(); const rec = cellCur.rec;
-  $('cell-val').value = rec ? entryText(cellCur.it, rec.value) : '';
+  if (TWO_HAND(cellCur.it)) { const lr = rec && splitLR(rec.lr); $('cell-val').value = rec ? (lr ? lr[0] : entryText(cellCur.it, rec.value)) : ''; $('cell-val2').value = lr ? lr[1] : ''; }
+  else $('cell-val').value = rec ? entryText(cellCur.it, rec.value) : '';
   $('cell-note').textContent = rec ? '이 날짜에 이미 기록이 있어요. 저장하면 고쳐져요.' : '';
   $('cell-del').hidden = !rec; $('cell-del').dataset.armed = ''; $('cell-del').textContent = '이 기록 지우기';
   $('cell-save').textContent = rec ? '고치기' : '저장하기'; $('cell-error').textContent = '';
@@ -131,10 +161,15 @@ function openCell(s, it) {
   $('cell-title').textContent = `${s.name} · ${it.label}`; $('cell-unit').textContent = unitOf(it);
   $('cell-date').value = today(); $('cell-minus').hidden = it.min >= 0;
   const dot = $('cell-pad').querySelector('[data-key="."]'); dot.disabled = !dotEnabled(it); dot.textContent = keyLabel(it, '.');
+  const two = TWO_HAND(it); $('cell-disp2').hidden = !two; $('cell-side1').hidden = !two; $('cell-unit2').textContent = unitOf(it); cellActive(1);
   cellSync(); $('cell').hidden = false; $('cell-save').focus();
 }
 function closeCell() { $('cell').hidden = true; cellCur = null; }
-function cellPress(k) { $('cell-error').textContent = ''; $('cell-val').value = pressKey(cellCur.it, $('cell-val').value, k); }
+const cellOn = () => (TWO_HAND(cellCur.it) && $('cell-val2').classList.contains('on') ? $('cell-val2') : $('cell-val'));
+function cellActive(n) { $('cell-val').classList.toggle('on', n === 1 && TWO_HAND(cellCur.it)); $('cell-val2').classList.toggle('on', n === 2); }
+$('cell-val').addEventListener('click', () => { if (cellCur && TWO_HAND(cellCur.it)) cellActive(1); });
+$('cell-val2').addEventListener('click', () => { if (cellCur && TWO_HAND(cellCur.it)) cellActive(2); });
+function cellPress(k) { $('cell-error').textContent = ''; const v = cellOn(); v.value = pressKey(cellCur.it, v.value, k); }
 for (const k of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫']) $('cell-pad').append(el('button', { type: 'button', 'data-key': k, class: k === '⌫' ? 'del' : '', 'aria-label': k === '⌫' ? '지우기' : k === '.' ? '소수점' : k }, k === '⌫' ? '지우기' : k));
 $('cell-pad').addEventListener('click', (ev) => { const b = ev.target.closest('button[data-key]'); if (b && cellCur && !b.disabled) cellPress(b.dataset.key); });
 $('cell-minus').addEventListener('click', () => { const v = $('cell-val'); v.value = v.value.startsWith('-') ? v.value.slice(1) : '-' + v.value; });
@@ -142,16 +177,16 @@ $('cell-date').addEventListener('change', () => { if (cellCur) cellSync(); });
 $('cell-close').addEventListener('click', closeCell);
 $('cell').addEventListener('click', (ev) => { if (ev.target === $('cell')) closeCell(); });
 $('cell-save').addEventListener('click', async () => {
-  const { s, it } = cellCur, shown = $('cell-val').value.trim(), date = $('cell-date').value;
+  const { s, it } = cellCur, two = TWO_HAND(it), date = $('cell-date').value;
   if (!date) { $('cell-error').textContent = '날짜를 골라 주세요.'; return; }
-  const pe = parseEntry(it, shown);
+  const pe = two ? parseHands(it, $('cell-val').value, $('cell-val2').value) : parseEntry(it, $('cell-val').value.trim());
   if (pe.error) { $('cell-error').textContent = pe.error; return; }
-  const raw = pe.send;
+  const raw = pe.send, shown = two ? `${pe.left}/${pe.right}(높은 쪽 ${raw})` : $('cell-val').value.trim(), hands = two ? { left: pe.left, right: pe.right } : {};
   const was = cellCur.rec;
   $('cell-save').disabled = true; busy('cell', '데이터 업로드 중');
   try {
-    if (was) await api.teacherUpdate(pin, was.recordId, { value: raw, date });
-    else await api.teacherAdd(pin, { id: s.id, date, item: it.key, value: raw });
+    if (was) await api.teacherUpdate(pin, was.recordId, { value: raw, date, ...hands });
+    else await api.teacherAdd(pin, { id: s.id, date, item: it.key, value: raw, ...hands });
     await load(); renderDash(); $('dash-note').textContent = `${s.name} · ${it.label} ${shown}${it.unit}을(를) ${was ? '고쳤어요' : '저장했어요'}.`;
     await busyOk('cell', '저장되었습니다!'); closeCell();
   } catch (e) { $('cell-error').textContent = e.message; }
@@ -174,7 +209,9 @@ $('login').addEventListener('submit', async (ev) => {
   try { await load(); $('pin').value = ''; renderDash(); prepUI(); show(root, 'dash'); }
   catch (e) { pin = ''; $('login-error').textContent = e.message; }
 });
-$('add').addEventListener('submit', (ev) => { ev.preventDefault(); run(() => api.teacherAdd(pin, { id: current.id, date: $('a-date').value, item: $('a-item').value, value: $('a-value').value })).then(() => { $('a-value').value = ''; }); });
+const addSync = () => { const g = $('a-item').value === 'grip'; $('a-label2').hidden = !g; $('a-value').placeholder = g ? '왼손' : ''; $('a-value2').placeholder = '오른손'; };
+$('a-item').addEventListener('change', addSync);
+$('add').addEventListener('submit', (ev) => { ev.preventDefault(); const g = $('a-item').value === 'grip'; run(() => api.teacherAdd(pin, { id: current.id, date: $('a-date').value, item: $('a-item').value, value: $('a-value').value, ...(g ? { left: $('a-value').value, right: $('a-value2').value } : {}) })).then(() => { $('a-value').value = ''; $('a-value2').value = ''; }); });
 $('f-grade').addEventListener('change', renderDash);
 $('reload').addEventListener('click', async () => { try { await load(); renderDash(); } catch (e) { $('dash-error').textContent = e.message; } });
 $('logout').addEventListener('click', () => { pin = ''; roster = []; records = []; show(root, 'login'); });
@@ -219,6 +256,6 @@ $('open-guide').addEventListener('click', () => { renderGuide($('guide-box')); s
 $('guide-back').addEventListener('click', () => show(root, 'dash'));
 
 for (const sel of [$('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, sel.id === 'a-item' && it.mmss ? `${it.label} (초 단위로 입력)` : it.label));
-$('ver').textContent = 'v36';
+$('ver').textContent = 'v37';
 await loadTable();
 attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력

@@ -8,7 +8,7 @@
 <link rel="preload" href="assets/fonts/BlackHanSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=36">
+<link rel="stylesheet" href="css/app.css?v=37">
 <script src="js/vendor/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -40,8 +40,14 @@
       <label id="value-label" for="value"></label>
       <div class="disp">
         <button type="button" id="minus" hidden aria-label="플러스 마이너스 바꾸기">±</button>
+        <span class="side" id="side1" hidden>왼손</span>
         <input id="value" readonly inputmode="none" autocomplete="off" aria-label="기록">
         <span id="unit"></span>
+      </div>
+      <div class="disp" id="disp2" hidden>
+        <span class="side">오른손</span>
+        <input id="value2" readonly inputmode="none" autocomplete="off" aria-label="오른손 기록">
+        <span id="unit2"></span>
       </div>
       <p class="error" id="form-error" role="alert"></p>
       <div class="pad" id="pad"></div>
@@ -72,7 +78,7 @@
     <div class="dlg-btns"><button type="button" class="primary" id="undone-again">다시 기록하기</button></div>
   </div>
 </div>
-<script type="module" src="js/student.js?v=36"></script>
+<script type="module" src="js/student.js?v=37"></script>
 <div class="ver-foot" id="ver"></div>
 </body>
 </html>

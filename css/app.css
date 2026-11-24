@@ -479,3 +479,26 @@ body[data-view=record] .items:not([data-n="1"]):not([data-n="2"]):not([data-n="3
 .cell-busy .spinner[hidden]{display:none}
 @keyframes hfspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.cell-busy .spinner{animation-duration:2.5s}}
+
+/* v37 티어 이미지 날짜 상자 */
+.tip{position:fixed;z-index:80;background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:8px;padding:8px 12px;font:700 15px var(--body);box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;white-space:nowrap}
+.tip[hidden]{display:none}
+td.cell .badge{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
+/* v37 악력: 왼손·오른손 두 칸 */
+.disp .side{font-weight:700;color:var(--ink-soft);white-space:nowrap}
+.disp.on input,.disp:not([hidden]) input.on{outline:3px solid var(--track);outline-offset:2px}
+.disp[hidden],.side[hidden]{display:none}
+/* v37 악력(두 칸) 배치: 입력 칸 두 개가 겹치지 않게 */
+.disp .side{flex:none;font-size:clamp(16px,3vmin,30px)}
+.disp input{min-width:0}
+body[data-view=record] #form[data-item=grip] .disp input{font-size:clamp(34px,8vmin,84px);height:clamp(52px,11vmin,110px)}
+body[data-view=record] #form[data-item=grip] .disp #unit,body[data-view=record] #form[data-item=grip] #unit2{font-size:clamp(18px,3.6vmin,40px)}
+@media (orientation:landscape) and (min-width:560px){
+  body[data-view=record] #form[data-item=grip]{grid-template-rows:auto auto auto auto 1fr}
+  body[data-view=record] #form[data-item=grip] #disp2{grid-column:1;grid-row:3}
+  body[data-view=record] #form[data-item=grip] .error{grid-row:4}
+  body[data-view=record] #form[data-item=grip] #save{grid-row:5}
+}
+.cell-dlg .disp input{min-width:0}
+.cell-dlg #cell-disp2 #cell-unit2{font-family:var(--body);font-weight:900;font-size:24px;color:var(--ink-soft);min-width:1.6em}

@@ -37,6 +37,16 @@ export function parseEntry(it, raw) {
   if (n < it.min || n > it.max) return { error: `${it.min}부터 ${it.max} 사이의 숫자를 입력해 주세요.` };
   return { n, send: t };
 }
+// 악력: 왼손·오른손을 각각 받고 평가에는 높은 쪽을 쓴다(측정요령)
+export const TWO_HAND = (it) => !!it && it.key === 'grip';
+export function parseHands(it, l, r) {
+  const a = parseEntry(it, l), b = parseEntry(it, r);
+  if (a.error) return { error: `왼손: ${a.error}` };
+  if (b.error) return { error: `오른손: ${b.error}` };
+  const n = Math.max(a.n, b.n);
+  return { n, send: String(n), left: a.send, right: b.send };
+}
+export const splitLR = (lr) => { const m = /^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/.exec(String(lr || '')); return m ? [m[1], m[2]] : null; };
 // 기록값 → 입력칸에 넣을 글자 (고치기용)
 export const entryText = (it, v) => (it.mmss ? `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}` : String(v));
 // 기록값 → 화면에 보여 줄 글자 (단위는 따로 붙인다)

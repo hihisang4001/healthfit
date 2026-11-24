@@ -5,7 +5,7 @@ import { clearAuto } from './autoprep.js';
 import { playTier, unlock, isMuted, setMuted } from './sound.js';
 import { tierFor, bestOfDay, gradeKey, isImplausible } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
-import { LOWER, unitOf, keyLabel, dotEnabled, pressKey, parseEntry, needText } from './entry.js';
+import { LOWER, unitOf, keyLabel, dotEnabled, pressKey, parseEntry, needText, TWO_HAND, parseHands } from './entry.js';
 import { startScan, normalize } from './qr.js';
 
 const root = document.getElementById('app');
@@ -88,9 +88,11 @@ function buildPad() {
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
   for (const k of keys) pad.append(el('button', { type: 'button', 'data-key': k, class: k === '⌫' ? 'del' : '', 'aria-label': k === '⌫' ? '지우기' : k === '.' ? '소수점' : k }, k === '⌫' ? '지우기' : k));
 }
+const activeField = () => ($('value2').classList.contains('on') && TWO_HAND(picked) ? $('value2') : $('value'));
+function setActive(which) { $('value').classList.toggle('on', which === 1); $('value2').classList.toggle('on', which === 2); }
 function press(k) {
   resetAsk();
-  const v = $('value'); $('form-error').textContent = '';
+  const v = activeField(); $('form-error').textContent = '';
   v.value = pressKey(picked, v.value, k);
 }
 function pick(it, btn) {
@@ -98,24 +100,27 @@ function pick(it, btn) {
   $('items').hidden = true; $('rec-title').textContent = '';
   $('form').hidden = false; $('form').dataset.item = it.key; $('form-error').textContent = '';
   $('value-label').replaceChildren(it.label, el('small', {}, `단위: ${unitOf(it)}`)); $('unit').textContent = unitOf(it);
-  resetAsk(); $('minus').hidden = it.min >= 0; $('value').value = '';
+  resetAsk(); $('minus').hidden = it.min >= 0; $('value').value = ''; $('value2').value = '';
+  const two = TWO_HAND(it); $('disp2').hidden = !two; $('side1').hidden = !two; $('unit2').textContent = unitOf(it); setActive(two ? 1 : 0);
   const dot = $('pad').querySelector('[data-key="."]'); dot.disabled = !dotEnabled(it); dot.textContent = keyLabel(it, '.'); dot.setAttribute('aria-label', it.mmss ? '콜론(분과 초 사이)' : '소수점');
 }
 $('pad') && buildPad();
 $('pad').addEventListener('click', (ev) => { const b = ev.target.closest('button[data-key]'); if (b && picked && !b.disabled) press(b.dataset.key); });
+$('value').addEventListener('click', () => { if (TWO_HAND(picked)) setActive(1); });
+$('value2').addEventListener('click', () => { if (TWO_HAND(picked)) setActive(2); });
 $('minus').addEventListener('click', () => { resetAsk(); const v = $('value'); v.value = v.value.startsWith('-') ? v.value.slice(1) : '-' + v.value; });
 
 $('form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
-  const pe = parseEntry(picked, $('value').value);
+  const two = TWO_HAND(picked), pe = two ? parseHands(picked, $('value').value, $('value2').value) : parseEntry(picked, $('value').value);
   if (pe.error) { $('form-error').textContent = pe.error; return; }
-  const raw = pe.send, n = pe.n, shown = $('value').value.trim();
+  const raw = pe.send, n = pe.n, shown = two ? raw : $('value').value.trim(), hands = two ? { left: pe.left, right: pe.right } : {};
   // 평소와 크게 다른 값: 큰 팝업으로 한 번 더 확인
   if (isImplausible(picked.key, gradeKey(me.grade, me.sex), n)) {
-    askConfirm(`정말 ${picked.mmss ? shown : raw}${picked.unit || ''}가 맞아요?`).then((yes) => { if (yes) doSave(raw, n); });
+    askConfirm(`정말 ${picked.mmss ? shown : raw}${picked.unit || ''}가 맞아요?`).then((yes) => { if (yes) doSave(raw, n, hands); });
     return;
   }
-  doSave(raw, n);
+  doSave(raw, n, hands);
 });
 function askConfirm(msg) {
   return new Promise((resolve) => {
@@ -124,19 +129,20 @@ function askConfirm(msg) {
     $('confirm-yes').onclick = () => done(true); $('confirm-no').onclick = () => done(false);
   });
 }
-async function doSave(raw, n) {
+async function doSave(raw, n, hands = {}) {
   $('save').disabled = true;
   // 저장 결과를 기다리지 않고 바로 등급 화면을 보여 주고, 저장은 뒤에서 확인한다
   const who = me, key = picked.key, cid = newCid(), date = today();
   const rec = { id: who.id, item: key, value: n, grade: who.grade, date, cid };
+  if (hands.left) rec.lr = `${hands.left}/${hands.right}`;
   who.records.push(rec);
   const drop = () => { const i = who.records.indexOf(rec); if (i >= 0) who.records.splice(i, 1); };
-  const promise = api.studentAdd(who.id, key, raw, { cid, date }).then((d) => {
+  const promise = api.studentAdd(who.id, key, raw, { cid, date, ...hands }).then((d) => {
     const i = who.records.indexOf(rec); if (i >= 0) who.records[i] = d.record;
     Object.assign(rec, d.record); store.cacheAddRecord(who.id, d.record); setSaved('저장했어요 ✓', false); return d.record;
   }).catch((e) => {
     // 인터넷이 끊겼으면 기록을 기기에 담아 두었다가 연결되면 자동으로 보낸다
-    if (e.offline && store.enqueue({ cid, id: who.id, item: key, value: raw, date })) {
+    if (e.offline && store.enqueue({ cid, id: who.id, item: key, value: raw, date, ...hands })) {
       rec.pending = true; pendingRecs.set(cid, rec);
       setSaved('인터넷이 끊겨 기기에 저장했어요. 연결되면 자동으로 보내요', false, 'pending'); setNet();
       return { pending: true, cid };
@@ -273,7 +279,7 @@ async function flush() {
     for (;;) {
       const it = store.queue()[0]; if (!it) break;
       try {
-        const d = await api.studentAdd(it.id, it.item, it.value, { cid: it.cid, date: it.date });
+        const d = await api.studentAdd(it.id, it.item, it.value, { cid: it.cid, date: it.date, left: it.left, right: it.right });
         store.removeQueued(it.cid); onSent(it, d.record); sentAt = Date.now(); setTimeout(setNet, 6100);
       } catch (e) {
         if (e.offline) break;
@@ -291,7 +297,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '36';
+const BUILD = '37';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);

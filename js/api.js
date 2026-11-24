@@ -26,7 +26,7 @@ export const api = {
   teacherList: (pin) => call({ action: 'teacher.list', pin }),
   teacherPromote: (pin) => call({ action: 'teacher.promote', pin, confirm: '학년올리기' }),
   teacherPromoteUndo: (pin) => call({ action: 'teacher.promoteUndo', pin }),
-  teacherAdd: (pin, { id, date, item, value }) => call({ action: 'teacher.add', pin, id, date, item, value }),
-  teacherUpdate: (pin, recordId, { value, date }) => call({ action: 'teacher.update', pin, recordId, value, date }),
+  teacherAdd: (pin, { id, date, item, value, left, right }) => call({ action: 'teacher.add', pin, id, date, item, value, left, right }),
+  teacherUpdate: (pin, recordId, { value, date, left, right }) => call({ action: 'teacher.update', pin, recordId, value, date, left, right }),
   teacherDelete: (pin, recordId) => call({ action: 'teacher.delete', pin, recordId }),
 };
