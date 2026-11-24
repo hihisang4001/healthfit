@@ -12,7 +12,7 @@ import { renderGuide } from './guide.js';
 
 const root = document.getElementById('app');
 const $ = (id) => document.getElementById(id);
-let pin = '', roster = [], records = [], current = null;
+let pin = '', roster = [], records = [], current = null, undoInfo = null;
 const itemOf = (k) => ITEMS.find((i) => i.key === k);
 const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
 
@@ -30,7 +30,7 @@ const store = makeStore(window.localStorage);
 async function load() {
   $('dash-error').textContent = '';
   const d = await api.teacherList(pin);
-  roster = d.roster; records = d.records;
+  roster = d.roster; records = d.records; undoInfo = d.undo || null; undoUI();
   savePrep(store, window.localStorage, roster, records); prepUI();   // 받아 올 때마다 이 태블릿에 자동 저장 (오프라인용)
 }
 function renderDash() {
@@ -102,6 +102,16 @@ async function run(fn) {
   catch (e) { $('s-error').textContent = e.message; }
 }
 
+/* ── 처리 중 화면: 로딩 → 초록 완료 문구(잠깐) ── */
+function busy(p, msg) {
+  const b = $(`${p}-busy`); b.hidden = false; b.className = 'cell-busy'; b.querySelector('.spinner').hidden = false; b.querySelector('p').textContent = msg;
+}
+async function busyOk(p, msg) {
+  const b = $(`${p}-busy`); b.querySelector('.spinner').hidden = true; b.className = 'cell-busy ok'; b.querySelector('p').textContent = msg;
+  await new Promise((r) => setTimeout(r, 900));
+}
+function busyEnd(p) { $(`${p}-busy`).hidden = true; }
+
 /* ── 표의 칸을 눌러 바로 기록 입력·고치기 (숫자 키패드) ── */
 let cellCur = null;   // { s, it, rec }
 function cellExisting() {
@@ -138,22 +148,25 @@ $('cell-save').addEventListener('click', async () => {
   if (pe.error) { $('cell-error').textContent = pe.error; return; }
   const raw = pe.send;
   const was = cellCur.rec;
-  $('cell-save').disabled = true; $('cell-busy').hidden = false; $('cell-spin').hidden = false; $('cell-busy').className = 'cell-busy';
-  $('cell-busy-msg').textContent = '데이터 업로드 중';
+  $('cell-save').disabled = true; busy('cell', '데이터 업로드 중');
   try {
     if (was) await api.teacherUpdate(pin, was.recordId, { value: raw, date });
     else await api.teacherAdd(pin, { id: s.id, date, item: it.key, value: raw });
     await load(); renderDash(); $('dash-note').textContent = `${s.name} · ${it.label} ${shown}${it.unit}을(를) ${was ? '고쳤어요' : '저장했어요'}.`;
-    $('cell-spin').hidden = true; $('cell-busy').className = 'cell-busy ok'; $('cell-busy-msg').textContent = '저장되었습니다!';
-    await new Promise((r) => setTimeout(r, 900)); closeCell();
+    await busyOk('cell', '저장되었습니다!'); closeCell();
   } catch (e) { $('cell-error').textContent = e.message; }
-  finally { $('cell-busy').hidden = true; $('cell-save').disabled = false; }
+  finally { busyEnd('cell'); $('cell-save').disabled = false; }
 });
 $('cell-del').addEventListener('click', async () => {
   const b = $('cell-del');
   if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = '정말 지울까요? 한 번 더 누르세요'; return; }
-  try { await api.teacherDelete(pin, cellCur.rec.recordId); await load(); renderDash(); $('dash-note').textContent = '기록을 지웠어요.'; closeCell(); }
-  catch (e) { $('cell-error').textContent = e.message; }
+  const was = cellCur.rec;
+  busy('cell', '데이터 삭제 중');
+  try {
+    await api.teacherDelete(pin, was.recordId); await load(); renderDash(); $('dash-note').textContent = '기록을 지웠어요.';
+    await busyOk('cell', '삭제되었습니다!'); closeCell();
+  } catch (e) { $('cell-error').textContent = e.message; }
+  finally { busyEnd('cell'); }
 });
 
 $('login').addEventListener('submit', async (ev) => {
@@ -165,12 +178,35 @@ $('add').addEventListener('submit', (ev) => { ev.preventDefault(); run(() => api
 $('f-grade').addEventListener('change', renderDash);
 $('reload').addEventListener('click', async () => { try { await load(); renderDash(); } catch (e) { $('dash-error').textContent = e.message; } });
 $('logout').addEventListener('click', () => { pin = ''; roster = []; records = []; show(root, 'login'); });
-$('promote').addEventListener('click', async () => {
-  const b = $('promote');
-  if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = '정말 올리기 (되돌릴 수 없어요)'; setTimeout(() => { b.dataset.armed = ''; b.textContent = '학년 올리기'; }, 6000); return; }
-  b.dataset.armed = ''; b.textContent = '학년 올리기';
-  try { const r = await api.teacherPromote(pin); await load(); renderDash(); $('dash-error').textContent = ''; $('dash-note').textContent = `진급 ${r.promoted}명, 졸업 ${r.graduated}명 처리했어요.`; }
-  catch (e) { $('dash-error').textContent = e.message; }
+/* ── 학년 올리기: 문구를 직접 입력해야 실행, 실행 뒤에는 되돌리기 가능 ── */
+const promoteOk = () => $('promote-text').value.replace(/\s+/g, '') === '학년올리기';
+function openPromote() { $('promote-text').value = ''; $('promote-error').textContent = ''; $('promote-go').disabled = true; $('promote-dlg').hidden = false; $('promote-text').focus(); }
+function closePromote() { $('promote-dlg').hidden = true; }
+$('promote').addEventListener('click', openPromote);
+$('promote-close').addEventListener('click', closePromote);
+$('promote-dlg').addEventListener('click', (ev) => { if (ev.target === $('promote-dlg')) closePromote(); });
+$('promote-text').addEventListener('input', () => { $('promote-go').disabled = !promoteOk(); });
+$('promote-go').addEventListener('click', async () => {
+  if (!promoteOk()) return;
+  $('promote-go').disabled = true; busy('promote', '학년을 올리는 중');
+  try {
+    const r = await api.teacherPromote(pin); await load(); renderDash(); $('dash-error').textContent = '';
+    $('dash-note').textContent = `진급 ${r.promoted}명, 졸업 ${r.graduated}명 처리했어요. 잘못 눌렀다면 [되돌리기]를 눌러 주세요.`;
+    await busyOk('promote', '학년을 올렸어요!'); closePromote();
+  } catch (e) { $('promote-error').textContent = e.message; }
+  finally { busyEnd('promote'); $('promote-go').disabled = !promoteOk(); }
+});
+function undoUI() {
+  const b = $('undo-promote'); if (!b) return;
+  b.hidden = !undoInfo; b.dataset.armed = ''; b.textContent = undoInfo ? `되돌리기 (${undoInfo.at.slice(5, 10).replace('-', '월 ')}일 올림)` : '되돌리기';
+}
+$('undo-promote').addEventListener('click', async () => {
+  const b = $('undo-promote');
+  if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = '정말 되돌릴까요? 한 번 더 누르세요'; setTimeout(() => { if (undoInfo) undoUI(); }, 6000); return; }
+  b.disabled = true; $('dash-note').textContent = '학년을 되돌리는 중이에요…';
+  try { const r = await api.teacherPromoteUndo(pin); await load(); renderDash(); $('dash-error').textContent = ''; $('dash-note').textContent = `${r.restored}명을 올리기 전 학년으로 되돌렸어요.`; }
+  catch (e) { $('dash-error').textContent = e.message; $('dash-note').textContent = ''; undoUI(); }
+  finally { b.disabled = false; }
 });
 function prepUI() { const e = $('prep-at'); if (e) e.textContent = prepLabel(window.localStorage); }
 function bannerCheck() {
@@ -185,6 +221,6 @@ $('open-guide').addEventListener('click', () => { renderGuide($('guide-box')); s
 $('guide-back').addEventListener('click', () => show(root, 'dash'));
 
 for (const sel of [$('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, sel.id === 'a-item' && it.mmss ? `${it.label} (초 단위로 입력)` : it.label));
-$('ver').textContent = 'v34';
+$('ver').textContent = 'v35';
 await loadTable();
 attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력

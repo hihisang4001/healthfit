@@ -25,6 +25,7 @@ export const api = {
   studentAdd: (id, item, value, extra = {}) => call({ action: 'student.add', id, item, value, ...extra }),
   teacherList: (pin) => call({ action: 'teacher.list', pin }),
   teacherPromote: (pin) => call({ action: 'teacher.promote', pin, confirm: '학년올리기' }),
+  teacherPromoteUndo: (pin) => call({ action: 'teacher.promoteUndo', pin }),
   teacherAdd: (pin, { id, date, item, value }) => call({ action: 'teacher.add', pin, id, date, item, value }),
   teacherUpdate: (pin, recordId, { value, date }) => call({ action: 'teacher.update', pin, recordId, value, date }),
   teacherDelete: (pin, recordId) => call({ action: 'teacher.delete', pin, recordId }),

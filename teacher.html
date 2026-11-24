@@ -8,7 +8,7 @@
 <link rel="preload" href="assets/fonts/BlackHanSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=34">
+<link rel="stylesheet" href="css/app.css?v=35">
 </head>
 <body>
 <header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="cards.html">QR 카드</a><a href="index.html">학생용</a></header>
@@ -34,7 +34,7 @@
       <label class="grow">학년<select id="f-grade"><option value="">전체</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
     </div>
     <div class="card" style="overflow:auto"><table id="table"></table></div>
-    <div class="card row"><span class="grow muted">새 학년이 되면 전체 학년을 한 칸씩 올립니다. 6학년은 졸업 처리되고 기록은 시트에 남습니다.</span><button class="danger" id="promote">학년 올리기</button></div>
+    <div class="card row"><span class="grow muted">새 학년이 되면 전체 학년을 한 칸씩 올립니다. 6학년은 졸업 처리되고 기록은 시트에 남습니다.</span><button class="ghost" id="undo-promote" hidden>되돌리기</button><button class="danger" id="promote">학년 올리기</button></div>
     <p class="muted" id="prep-at" role="status"></p>
     <p class="muted" id="dash-note" role="status"></p>
     <p class="error" id="dash-error" role="alert"></p>
@@ -66,7 +66,18 @@
     <div class="cell-btns"><button type="button" class="primary" id="cell-save">저장하기</button><button type="button" class="danger" id="cell-del" hidden>이 기록 지우기</button></div>
   </div>
 </div>
-<script type="module" src="js/teacher.js?v=34"></script>
+<div class="modal" id="promote-dlg" role="dialog" aria-modal="true" aria-labelledby="promote-title" hidden>
+  <div class="dlg cell-dlg">
+    <button type="button" class="dlg-x" id="promote-close">닫기</button>
+    <h2 id="promote-title">학년 올리기</h2>
+    <p class="muted">전체 학생이 한 학년씩 올라가고 6학년은 졸업 처리돼요. 실행한 뒤에는 [되돌리기]로 원래대로 돌릴 수 있어요.</p>
+    <label>실행하려면 <b>학년 올리기</b>를 그대로 입력하세요<input id="promote-text" autocomplete="off" autocapitalize="off" placeholder="학년 올리기"></label>
+    <p class="error" id="promote-error" role="alert"></p>
+    <div class="cell-btns"><button type="button" class="danger" id="promote-go" disabled>올리기</button></div>
+    <div class="cell-busy" id="promote-busy" role="status" aria-live="polite" hidden><div class="spinner"></div><p id="promote-busy-msg"></p></div>
+  </div>
+</div>
+<script type="module" src="js/teacher.js?v=35"></script>
 <div class="ver-foot" id="ver"></div>
 </body>
 </html>
