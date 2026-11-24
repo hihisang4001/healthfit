@@ -433,3 +433,8 @@ td.cell .plus{color:#9AA39D;font-size:22px;font-weight:700}
 .cell-btns{display:grid;gap:10px}
 .cell-btns button{min-height:0;padding:12px;font-size:26px;border-radius:16px}
 @media (max-height:700px){.cell-dlg .pad{grid-auto-rows:48px}.cell-dlg .disp input{height:56px}}
+/* 비밀번호 숫자 키패드 창 (v28) */
+.pin-dlg .pin-val{letter-spacing:.2em;font-size:clamp(34px,6vmin,56px)}
+.pin-dlg .pad button.ok{background:var(--track);color:#fff;border-color:transparent;font-size:24px;box-shadow:0 4px 0 var(--track-deep)}
+input#pin[readonly]{cursor:pointer;background:var(--paper)}
+.pin-dlg .disp{margin-top:34px}

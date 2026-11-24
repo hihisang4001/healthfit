@@ -1,3 +1,4 @@
+import { attachPinPad } from './pinpad.js';
 import { api } from './api.js';
 import { ITEMS } from './config.js';
 import { TIERS, tierFor, latestBest, gradeKey } from './tiers.js';
@@ -191,5 +192,6 @@ bannerCheck();
 $('s-back').addEventListener('click', () => { renderDash(); show(root, 'dash'); });
 
 for (const sel of [$('f-item'), $('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, it.label));
-$('ver').textContent = 'v27';
+$('ver').textContent = 'v28';
 await loadTable();
+attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력

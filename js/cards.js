@@ -1,5 +1,6 @@
 // QR 카드 탭: [아침 건강달리기]의 QR 카드와 같은 카드를 인쇄하거나 휴대폰 화면으로 보여 준다.
 // 명단은 학생 이름이 들어 있어서 교사용 비밀번호를 넣은 뒤에만 불러온다.
+import { attachPinPad } from './pinpad.js';
 import { api } from './api.js';
 const $ = (id) => document.getElementById(id);
 import { gradeColor, gradeInk } from './grades.js';
@@ -129,3 +130,4 @@ $('login').addEventListener('submit', async (ev) => {
     $('cards-login').hidden = true; $('v-cards').hidden = false;
   } catch (e) { $('login-error').textContent = e.message; }
 });
+attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력
