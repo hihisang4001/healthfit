@@ -60,6 +60,12 @@ function withTip(img, text) {
 }
 document.addEventListener('scroll', tipHide, true);
 
+// 악력: 높은 기록이 왼손이면 (왼), 오른손이면 (오)
+function handMark(it, rec) {
+  const lr = TWO_HAND(it) && splitLR(rec.lr); if (!lr) return '';
+  const l = Number(lr[0]), r = Number(lr[1]);
+  return l === r ? ' (양손 같음)' : l > r ? ' (왼)' : ' (오)';
+}
 function renderDash() {
   const list = filtered(), table = $('table'); table.replaceChildren();
   table.append(el('tr', {}, el('th', {}, '이름'), el('th', {}, '학년'), ...ITEMS.map((i) => el('th', {}, i.label))));
@@ -69,7 +75,7 @@ function renderDash() {
       const { rec, t } = curTier(s, it.key);
       const open = () => { if (Date.now() < tipHoldUntil) return; openCell(s, it); };
       tr.append(el('td', { class: 'cell', tabindex: '0', role: 'button', 'aria-label': `${s.name} ${it.label} 기록 입력`, onclick: open, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } },
-        !rec ? el('span', { class: 'plus' }, '＋') : !s.sex ? '성별 필요' : el('div', {}, withTip(badge(t.index, true), `${TIERS[t.index]} · ${dateText(rec.date)} 측정`), el('div', { class: 'muted' }, `${fmt(it.key, rec.value)}${it.unit}`))));
+        !rec ? el('span', { class: 'plus' }, '＋') : !s.sex ? '성별 필요' : el('div', {}, withTip(badge(t.index, true), `${TIERS[t.index]} · ${dateText(rec.date)} 측정`), el('div', { class: 'muted' }, `${fmt(it.key, rec.value)}${it.unit}${handMark(it, rec)}`))));
     }
     table.append(tr);
   }
@@ -256,6 +262,6 @@ $('open-guide').addEventListener('click', () => { renderGuide($('guide-box')); s
 $('guide-back').addEventListener('click', () => show(root, 'dash'));
 
 for (const sel of [$('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, sel.id === 'a-item' && it.mmss ? `${it.label} (초 단위로 입력)` : it.label));
-$('ver').textContent = 'v37';
+$('ver').textContent = 'v38';
 await loadTable();
 attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력
