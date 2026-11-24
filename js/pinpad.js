@@ -17,13 +17,15 @@ function build() {
   }
   document.body.append(m); return m;
 }
+// 오래된 사파리(requestSubmit 없음)에서도 바로 제출되게 한다
+const submit = (f) => { if (f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); };
 export function attachPinPad(input) {
   input.readOnly = true; input.setAttribute('inputmode', 'none'); input.type = 'password';
   let digits = '';
   const val = () => dlg.querySelector('.pin-val');
   const show = () => { val().value = '●'.repeat(digits.length); };
   const close = () => { dlg.hidden = true; document.removeEventListener('keydown', onKey, true); input.focus({ preventScroll: true }); };
-  const confirm = () => { input.value = digits; close(); if (digits && input.form) input.form.requestSubmit(); };
+  const confirm = () => { input.value = digits; close(); if (digits && input.form) submit(input.form); };
   const press = (k) => {
     if (k === '⌫') digits = digits.slice(0, -1);
     else if (k === 'ok') return confirm();
