@@ -8,7 +8,7 @@
 <link rel="preload" href="assets/fonts/BlackHanSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=23">
+<link rel="stylesheet" href="css/app.css?v=24">
 <script src="js/vendor/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -30,7 +30,7 @@
 
   <section data-view="home" hidden>
     <div class="row"><h1 class="grow" id="hello"></h1><button class="ghost" id="logout">다른 친구</button></div>
-    <div class="blocks"><button class="primary" id="go-record">기록하기</button><button id="go-mine">내 기록</button></div>
+    <div class="blocks"><button class="primary" id="go-record">기록하기</button><button id="go-mine">내 기록 보기</button></div>
   </section>
 
   <section data-view="record" hidden>
@@ -51,7 +51,7 @@
 
   <section data-view="result" hidden>
     <div class="card result" id="result"></div>
-    <div class="blocks short"><button type="button" class="danger" id="undo">잘못 입력했어요</button><button id="to-mine">내 기록 보기</button></div>
+    <div class="blocks short"><button type="button" class="danger" id="undo">잘못 입력했어요</button><button id="to-start">처음으로 돌아가기</button></div>
   </section>
 
   <section data-view="mine" hidden>
@@ -72,7 +72,7 @@
     <div class="dlg-btns"><button type="button" class="primary" id="undone-again">다시 기록하기</button></div>
   </div>
 </div>
-<script type="module" src="js/student.js?v=23"></script>
+<script type="module" src="js/student.js?v=24"></script>
 <div class="ver-foot" id="ver"></div>
 </body>
 </html>

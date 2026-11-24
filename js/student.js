@@ -199,7 +199,7 @@ function askUndone(itemKey) {
   const box = $('undone'), it = ITEMS.find((x) => x.key === itemKey);
   $('undone-msg').textContent = it ? `${it.label} 기록을 취소했어요` : '기록을 취소했어요';
   box.hidden = false; $('undone-again').focus();
-  const done = (again) => { box.hidden = true; $('undone-again').onclick = $('undone-close').onclick = null; if (again && it) pick(it); };
+  const done = (again) => { box.hidden = true; $('undone-again').onclick = $('undone-close').onclick = null; if (again && it) pick(it); else logout(); };   // 닫기: QR 체크 화면으로
   $('undone-again').onclick = () => done(true); $('undone-close').onclick = () => done(false);
 }
 function showResult(rec, pending = false) {
@@ -216,7 +216,7 @@ function showResult(rec, pending = false) {
   const best = bestOfDay(me.records.filter((r) => r.id === me.id && r.item === rec.item && r.date === rec.date))[0];
   if (best && best.value !== rec.value) box.append(el('p', { class: 'muted' }, `오늘의 최고 기록은 ${fmt(rec.item, best.value)}${it.unit}이에요.`));
   box.append(el('p', { id: 'save-state', class: 'muted' }, pending ? '저장하는 중…' : ''));
-  const ub = $('undo'); ub.hidden = false; ub.disabled = false; ub.textContent = '잘못 입력했어요';   // 취소 버튼은 '내 기록 보기' 옆의 큰 버튼
+  const ub = $('undo'); ub.hidden = false; ub.disabled = false; ub.textContent = '잘못 입력했어요';   // 취소 버튼은 '처음으로 돌아가기' 옆의 큰 버튼
   view('result'); startResultTimer();
   if (t) playTier(t.index);
 }
@@ -252,8 +252,7 @@ function renderMine() {
 
 $('go-record').addEventListener('click', () => { renderItems(); view('record'); });
 $('go-mine').addEventListener('click', () => { renderMine(); view('mine'); });
-$('to-mine').addEventListener('click', stopResultTimer, true);
-$('to-mine').addEventListener('click', () => { renderMine(); view('mine'); });
+$('to-start').addEventListener('click', logout);   // 처음으로 돌아가기: 다음 학생이 찍을 수 있게 QR 체크 화면으로
 $('undo').addEventListener('click', undoLast);
 $('logout').addEventListener('click', logout);
 root.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { if (b.closest('[data-view=record]') && !$('form').hidden) renderItems(); else view('home'); }));
@@ -302,7 +301,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '23';
+const BUILD = '24';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);

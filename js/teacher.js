@@ -145,5 +145,5 @@ bannerCheck();
 $('s-back').addEventListener('click', () => { renderDash(); show(root, 'dash'); });
 
 for (const sel of [$('f-item'), $('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, it.label));
-$('ver').textContent = 'v23';
+$('ver').textContent = 'v24';
 await loadTable();
