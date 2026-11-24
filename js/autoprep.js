@@ -12,9 +12,9 @@ export function markPrep(storage, at = Date.now()) { try { storage.setItem(PREP,
 // v23~v25에서 저장했던 자동 갱신 비밀번호를 지운다
 export function clearAuto(storage) { try { storage.removeItem('hf-auto'); } catch (e) {} }
 export function prepLabel(storage) {
-  const t = lastPrepAt(storage); if (!t) return '아직 저장한 적이 없어요';
+  const t = lastPrepAt(storage); if (!t) return '아직 명단을 저장하지 않았어요.';
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(t)).map((x) => [x.type, x.value]));
-  return `${p.month}월 ${p.day}일 ${p.hour}:${p.minute}에 마지막으로 저장했어요`;
+  return `${p.month}월 ${p.day}일 ${Number(p.hour)}시 ${Number(p.minute)}분에 명단을 마지막으로 저장했어요.`;
 }
 // 받아 온 명단을 저장하고 저장 시각을 남긴다. 성공하면 true
 export function savePrep(store, storage, roster, records, now = Date.now()) {
