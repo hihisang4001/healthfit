@@ -404,3 +404,32 @@ body[data-view=record] #form .pad button.del{white-space:nowrap;font-size:clamp(
 
 label.check{display:flex;align-items:flex-start;gap:10px;font-size:15px;font-weight:700;color:var(--ink-soft);margin-top:6px}
 label.check input{width:22px;height:22px;min-height:0;padding:0;margin:2px 0 0;flex:none;accent-color:var(--turf)}
+
+/* 교사용 현황판: 학생 이름은 학년 색(QR 카드와 같은 색), 등급 분포는 티어 배지와 함께 */
+td.name button.gname{background:var(--gc);color:var(--gi);border:0;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.legend{align-items:flex-start;gap:4px}
+.legend div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.78rem;font-weight:700;color:var(--ink-soft);min-width:0}
+.legend .badge.sm{width:52px;height:52px}
+.legend span{max-width:100%;overflow-wrap:anywhere;line-height:1.15;text-align:center}
+@media (max-width:560px){.legend .badge.sm{width:34px;height:34px}.legend div{font-size:.62rem}}
+.bars{height:130px}
+
+/* 교사용: 표의 칸을 눌러 입력하는 키패드 창 */
+td.cell{cursor:pointer;min-width:72px}
+td.cell:hover,td.cell:focus-visible{background:var(--turf-soft);outline:none}
+td.cell .plus{color:#9AA39D;font-size:22px;font-weight:700}
+.cell-dlg{width:min(94vw,520px);max-height:calc(var(--app-h) - 24px);overflow-y:auto;gap:10px;text-align:left;padding:18px}
+.cell-dlg h2{margin:0 64px 0 0;font-size:clamp(22px,4vmin,34px)}
+.cell-dlg label{font-size:15px}
+.cell-dlg .disp input{font-size:clamp(40px,7vmin,64px);height:clamp(60px,9vmin,84px);text-align:center;min-height:0;padding:0 10px;border-radius:14px}
+.cell-dlg .disp #minus,.cell-dlg #cell-minus{font-size:30px;min-height:0;padding:6px 16px;border-radius:14px}
+.cell-dlg .disp #cell-unit{font-family:var(--body);font-weight:900;font-size:24px;color:var(--ink-soft);min-width:1.6em}
+.cell-dlg .pad{flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:60px;gap:10px;min-height:0}
+.cell-dlg .pad button{min-height:0;border-radius:14px;font-size:30px;padding:0}
+.cell-dlg .pad button.del{font-size:20px;color:var(--bad);white-space:nowrap}
+.cell-dlg .pad button:disabled{opacity:.3}
+.cell-dlg .error{margin:0}.cell-dlg .error:empty{display:none}
+.cell-dlg .muted{margin:0;font-size:15px}.cell-dlg .muted:empty{display:none}
+.cell-btns{display:grid;gap:10px}
+.cell-btns button{min-height:0;padding:12px;font-size:26px;border-radius:16px}
+@media (max-height:700px){.cell-dlg .pad{grid-auto-rows:48px}.cell-dlg .disp input{height:56px}}

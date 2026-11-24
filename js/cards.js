@@ -2,11 +2,10 @@
 // 명단은 학생 이름이 들어 있어서 교사용 비밀번호를 넣은 뒤에만 불러온다.
 import { api } from './api.js';
 const $ = (id) => document.getElementById(id);
-const GRADE_COLORS = { 1: '#D2412E', 2: '#E8742A', 3: '#E0A800', 4: '#22874E', 5: '#2D6CC8', 6: '#7B4FC2' };
+import { gradeColor, gradeInk } from './grades.js';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const gradeOf = (p) => String(p.grade || '').replace(/학년/g, '').trim();
-const colorOf = (g) => GRADE_COLORS[Number(g)] || '#5A6660';
-const inkOf = (g) => (Number(g) === 3 ? '#2A2000' : '#fff');   // 노란색(3학년) 위에는 진한 글씨
+const colorOf = gradeColor, inkOf = gradeInk;
 const nameScale = (n) => { const k = [...String(n)].length; return k <= 4 ? 1 : k === 5 ? 0.8 : k === 6 ? 0.66 : 0.55; };   // 이름이 길면 줄인다
 const gdot = (g) => `<i class="gdot" style="background:${colorOf(g)}"></i>`;
 let roster = [], pvWake = null;

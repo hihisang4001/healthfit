@@ -4,6 +4,7 @@ import { TIERS, tierFor, latestBest, gradeKey } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
 import { bestOfDay } from './tiers.js';
 import { makeStore } from './offline.js';
+import { gradeColor, gradeInk } from './grades.js';
 import { prepMap, markPrep, prepLabel, autoOn, setAuto, clearAuto } from './autoprep.js';
 
 const root = document.getElementById('app');
@@ -31,17 +32,19 @@ function renderDash() {
   const list = filtered(), table = $('table'); table.replaceChildren();
   table.append(el('tr', {}, el('th', {}, '이름'), el('th', {}, '학년'), ...ITEMS.map((i) => el('th', {}, i.label))));
   for (const s of list) {
-    const tr = el('tr', {}, el('td', { class: 'name' }, el('button', { class: 'ghost', onclick: () => openStudent(s) }, s.name)), el('td', {}, `${s.grade}`));
+    const tr = el('tr', {}, el('td', { class: 'name' }, el('button', { class: 'ghost gname', style: `--gc:${gradeColor(s.grade)};--gi:${gradeInk(s.grade)}`, onclick: () => openStudent(s) }, s.name)), el('td', {}, `${s.grade}`));
     for (const it of ITEMS) {
       const { rec, t } = curTier(s, it.key);
-      tr.append(el('td', {}, !rec ? '–' : !s.sex ? '성별 필요' : el('div', {}, badge(t.index, true), el('div', { class: 'muted' }, `${fmt(it.key, rec.value)}${it.unit}`))));
+      const open = () => openCell(s, it);
+      tr.append(el('td', { class: 'cell', tabindex: '0', role: 'button', 'aria-label': `${s.name} ${it.label} 기록 입력`, onclick: open, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } },
+        !rec ? el('span', { class: 'plus' }, '＋') : !s.sex ? '성별 필요' : el('div', {}, badge(t.index, true), el('div', { class: 'muted' }, `${fmt(it.key, rec.value)}${it.unit}`))));
     }
     table.append(tr);
   }
   const key = $('f-item').value, counts = new Array(9).fill(0);
   for (const s of list) { const { t } = curTier(s, key); if (t) counts[t.index]++; }
   const max = Math.max(1, ...counts), bars = $('bars'), legend = $('legend'); bars.replaceChildren(); legend.replaceChildren();
-  counts.forEach((c, i) => { bars.append(el('div', { style: `height:${(c / max) * 100}%`, title: `${TIERS[i]} ${c}명` }, el('span', {}, c || ''))); legend.append(el('div', {}, TIERS[i])); });
+  counts.forEach((c, i) => { bars.append(el('div', { style: `height:${(c / max) * 100}%`, title: `${TIERS[i]} ${c}명` }, el('span', {}, c || ''))); legend.append(el('div', {}, badge(i, true), el('span', {}, TIERS[i]))); });
 }
 function openStudent(s) {
   current = s; $('s-error').textContent = '';
@@ -98,6 +101,67 @@ async function run(fn) {
   catch (e) { $('s-error').textContent = e.message; }
 }
 
+/* ── 표의 칸을 눌러 바로 기록 입력·고치기 (숫자 키패드) ── */
+const decimalsOf = (it) => { const m = String(it.step).split('.')[1]; return m ? m.length : 0; };
+let cellCur = null;   // { s, it, rec }
+function cellExisting() {
+  const { s, it } = cellCur, d = $('cell-date').value;
+  const same = records.filter((r) => r.id === s.id && r.item === it.key && r.date === d);
+  return same.length ? same[same.length - 1] : null;
+}
+function cellSync() {
+  cellCur.rec = cellExisting(); const rec = cellCur.rec;
+  $('cell-val').value = rec ? String(rec.value) : '';
+  $('cell-note').textContent = rec ? '이 날짜에 이미 기록이 있어요. 저장하면 고쳐져요.' : '';
+  $('cell-del').hidden = !rec; $('cell-del').dataset.armed = ''; $('cell-del').textContent = '이 기록 지우기';
+  $('cell-save').textContent = rec ? '고치기' : '저장하기'; $('cell-error').textContent = '';
+}
+function openCell(s, it) {
+  cellCur = { s, it, rec: null };
+  $('cell-title').textContent = `${s.name} · ${it.label}`; $('cell-unit').textContent = it.unit;
+  $('cell-date').value = today(); $('cell-minus').hidden = it.min >= 0;
+  $('cell-pad').querySelector('[data-key="."]').disabled = !decimalsOf(it);
+  cellSync(); $('cell').hidden = false; $('cell-save').focus();
+}
+function closeCell() { $('cell').hidden = true; cellCur = null; }
+function cellPress(k) {
+  const v = $('cell-val'), dec = decimalsOf(cellCur.it); let t = v.value; $('cell-error').textContent = '';
+  if (k === '⌫') t = t.slice(0, -1);
+  else if (k === '.') { if (dec && t !== '' && t !== '-' && !t.includes('.')) t += '.'; }
+  else {
+    const frac = t.split('.')[1];
+    if (t.replace('-', '').replace('.', '').length >= 6) return;
+    if (frac !== undefined && frac.length >= dec) return;
+    t = (t === '0' ? '' : t === '-0' ? '-' : t) + k;
+  }
+  v.value = t;
+}
+for (const k of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫']) $('cell-pad').append(el('button', { type: 'button', 'data-key': k, class: k === '⌫' ? 'del' : '', 'aria-label': k === '⌫' ? '지우기' : k === '.' ? '소수점' : k }, k === '⌫' ? '지우기' : k));
+$('cell-pad').addEventListener('click', (ev) => { const b = ev.target.closest('button[data-key]'); if (b && cellCur && !b.disabled) cellPress(b.dataset.key); });
+$('cell-minus').addEventListener('click', () => { const v = $('cell-val'); v.value = v.value.startsWith('-') ? v.value.slice(1) : '-' + v.value; });
+$('cell-date').addEventListener('change', () => { if (cellCur) cellSync(); });
+$('cell-close').addEventListener('click', closeCell);
+$('cell').addEventListener('click', (ev) => { if (ev.target === $('cell')) closeCell(); });
+$('cell-save').addEventListener('click', async () => {
+  const { s, it } = cellCur, raw = $('cell-val').value.trim(), n = Number(raw), date = $('cell-date').value;
+  if (!date) { $('cell-error').textContent = '날짜를 골라 주세요.'; return; }
+  if (raw === '' || !/^-?\d+(\.\d+)?$/.test(raw)) { $('cell-error').textContent = '숫자를 눌러 입력해 주세요.'; return; }
+  if (n < it.min || n > it.max) { $('cell-error').textContent = `${it.min}부터 ${it.max} 사이의 숫자를 입력해 주세요.`; return; }
+  $('cell-save').disabled = true;
+  try {
+    if (cellCur.rec) await api.teacherUpdate(pin, cellCur.rec.recordId, { value: raw, date });
+    else await api.teacherAdd(pin, { id: s.id, date, item: it.key, value: raw });
+    await load(); renderDash(); $('dash-note').textContent = `${s.name} · ${it.label} ${raw}${it.unit}을(를) ${cellCur.rec ? '고쳤어요' : '저장했어요'}.`; closeCell();
+  } catch (e) { $('cell-error').textContent = e.message; }
+  finally { $('cell-save').disabled = false; }
+});
+$('cell-del').addEventListener('click', async () => {
+  const b = $('cell-del');
+  if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = '정말 지울까요? 한 번 더 누르세요'; return; }
+  try { await api.teacherDelete(pin, cellCur.rec.recordId); await load(); renderDash(); $('dash-note').textContent = '기록을 지웠어요.'; closeCell(); }
+  catch (e) { $('cell-error').textContent = e.message; }
+});
+
 $('login').addEventListener('submit', async (ev) => {
   ev.preventDefault(); pin = $('pin').value; $('login-error').textContent = '';
   try { await load(); $('pin').value = ''; renderDash(); prepUI(); show(root, 'dash'); }
@@ -145,5 +209,5 @@ bannerCheck();
 $('s-back').addEventListener('click', () => { renderDash(); show(root, 'dash'); });
 
 for (const sel of [$('f-item'), $('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, it.label));
-$('ver').textContent = 'v24';
+$('ver').textContent = 'v25';
 await loadTable();
