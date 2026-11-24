@@ -1,7 +1,7 @@
 import { api, onNet } from './api.js';
 import { makeStore, newCid } from './offline.js';
 import { DEV, ITEMS } from './config.js';
-import { autoRefresh } from './autoprep.js';
+import { clearAuto } from './autoprep.js';
 import { playTier, unlock, isMuted, setMuted } from './sound.js';
 import { tierFor, bestOfDay, gradeKey, isImplausible } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
@@ -293,15 +293,15 @@ async function flush() {
   } finally { flushing = false; setNet(); }
 }
 onNet((ok) => { netOk = ok; setNet(); if (ok && !flushing && store.queue().length) flush(); });
-window.addEventListener('online', () => { netOk = true; setNet(); flush(); autoRefresh(store, window.localStorage).catch(() => {}); });
+window.addEventListener('online', () => { netOk = true; setNet(); flush(); });
 window.addEventListener('offline', () => { netOk = false; setNet(); });
-setInterval(() => { if (store.queue().length) flush(); else if (!netOk) api.ping().catch(() => {}); if (netOk) autoRefresh(store, window.localStorage).catch(() => {}); }, 15000);
-setTimeout(() => autoRefresh(store, window.localStorage).catch(() => {}), 3000);   // 켜 둔 태블릿은 열 때도 한 번 확인 (6시간이 지났을 때만 실제로 받는다)
+setInterval(() => { if (store.queue().length) flush(); else if (!netOk) api.ping().catch(() => {}); }, 15000);
+clearAuto(window.localStorage);   // 예전 버전이 저장해 둔 교사용 비밀번호를 지운다
 setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '25';
+const BUILD = '26';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
