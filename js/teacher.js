@@ -178,23 +178,21 @@ $('add').addEventListener('submit', (ev) => { ev.preventDefault(); run(() => api
 $('f-grade').addEventListener('change', renderDash);
 $('reload').addEventListener('click', async () => { try { await load(); renderDash(); } catch (e) { $('dash-error').textContent = e.message; } });
 $('logout').addEventListener('click', () => { pin = ''; roster = []; records = []; show(root, 'login'); });
-/* ── 학년 올리기: 문구를 직접 입력해야 실행, 실행 뒤에는 되돌리기 가능 ── */
-const promoteOk = () => $('promote-text').value.replace(/\s+/g, '') === '학년올리기';
-function openPromote() { $('promote-text').value = ''; $('promote-error').textContent = ''; $('promote-go').disabled = true; $('promote-dlg').hidden = false; $('promote-text').focus(); }
-function closePromote() { $('promote-dlg').hidden = true; }
-$('promote').addEventListener('click', openPromote);
-$('promote-close').addEventListener('click', closePromote);
-$('promote-dlg').addEventListener('click', (ev) => { if (ev.target === $('promote-dlg')) closePromote(); });
-$('promote-text').addEventListener('input', () => { $('promote-go').disabled = !promoteOk(); });
-$('promote-go').addEventListener('click', async () => {
-  if (!promoteOk()) return;
-  $('promote-go').disabled = true; busy('promote', '학년을 올리는 중');
+/* ── 학년 올리기: 교사용 비밀번호를 한 번 더 입력해야 실행, 실행 뒤에는 되돌리기 가능 ── */
+attachPinPad($('promote-pin'));
+$('promote').addEventListener('click', () => { $('dash-error').textContent = ''; $('promote-pin').value = ''; $('promote-pin').click(); });
+$('promote-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const entered = $('promote-pin').value; $('promote-pin').value = '';
+  if (!entered) return;
+  if (entered !== pin) { $('dash-error').textContent = '비밀번호가 맞지 않아요. 학년은 그대로예요.'; return; }
+  $('promote-dlg').hidden = false; busy('promote', '학년을 올리는 중');
   try {
-    const r = await api.teacherPromote(pin); await load(); renderDash(); $('dash-error').textContent = '';
+    const r = await api.teacherPromote(entered); await load(); renderDash(); $('dash-error').textContent = '';
     $('dash-note').textContent = `진급 ${r.promoted}명, 졸업 ${r.graduated}명 처리했어요. 잘못 눌렀다면 [되돌리기]를 눌러 주세요.`;
-    await busyOk('promote', '학년을 올렸어요!'); closePromote();
-  } catch (e) { $('promote-error').textContent = e.message; }
-  finally { busyEnd('promote'); $('promote-go').disabled = !promoteOk(); }
+    await busyOk('promote', '학년을 올렸어요!');
+  } catch (e) { $('dash-error').textContent = e.message; }
+  finally { busyEnd('promote'); $('promote-dlg').hidden = true; }
 });
 function undoUI() {
   const b = $('undo-promote'); if (!b) return;
@@ -221,6 +219,6 @@ $('open-guide').addEventListener('click', () => { renderGuide($('guide-box')); s
 $('guide-back').addEventListener('click', () => show(root, 'dash'));
 
 for (const sel of [$('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, sel.id === 'a-item' && it.mmss ? `${it.label} (초 단위로 입력)` : it.label));
-$('ver').textContent = 'v35';
+$('ver').textContent = 'v36';
 await loadTable();
 attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력

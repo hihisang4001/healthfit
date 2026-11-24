@@ -1,7 +1,6 @@
 // 비밀번호 칸을 누르면 숫자 키패드 창이 뜬다(학생 기록 입력 때처럼). 비밀번호는 숫자로만 만들고, 화면에는 ●로 가려 보여 준다.
 // 사용: attachPinPad(input) — input은 form 안에 있어야 한다. 확인을 누르면 form이 제출된다.
 const MAX = 12;
-let dlg = null;
 function build() {
   const m = document.createElement('div'); m.className = 'modal'; m.hidden = true; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-label', '비밀번호 입력');
   m.innerHTML = '<div class="dlg cell-dlg pin-dlg"><button type="button" class="dlg-x" data-pin="close">닫기</button><h2>비밀번호</h2>'
@@ -20,6 +19,7 @@ function build() {
 // 오래된 사파리(requestSubmit 없음)에서도 바로 제출되게 한다
 const submit = (f) => { if (f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); };
 export function attachPinPad(input) {
+  let dlg = null;   // 입력 칸마다 자기 창을 가진다(로그인 칸·학년 올리기 확인 칸이 섞이지 않게)
   input.readOnly = true; input.setAttribute('inputmode', 'none'); input.type = 'password';
   let digits = '';
   const val = () => dlg.querySelector('.pin-val');
