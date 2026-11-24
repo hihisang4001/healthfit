@@ -8,7 +8,7 @@
 <link rel="preload" href="assets/fonts/BlackHanSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=29">
+<link rel="stylesheet" href="css/app.css?v=30">
 </head>
 <body>
 <header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="cards.html">QR 카드</a><a href="index.html">학생용</a></header>
@@ -22,8 +22,13 @@
     </form>
   </section>
 
+  <section data-view="guide" hidden>
+    <div class="row"><h1 class="grow">검사방법 안내</h1><button class="ghost" id="guide-back">현황판으로</button></div>
+    <div id="guide-box"></div>
+  </section>
+
   <section data-view="dash" hidden>
-    <div class="row"><h1 class="grow">전체 현황</h1><button class="ghost" id="reload">새로 고침</button><button class="ghost" id="logout">나가기</button></div>
+    <div class="row"><h1 class="grow">전체 현황</h1><button class="ghost" id="open-guide">검사방법 안내</button><button class="ghost" id="reload">새로 고침</button><button class="ghost" id="logout">나가기</button></div>
     <div class="card banner" id="backup-banner" hidden><span>학기가 끝났어요. 구글 시트를 <b>사본 만들기</b>로 한 번 저장해 두세요.</span><button class="ghost" id="banner-close">확인했어요</button></div>
     <div class="card row">
       <label class="grow">학년<select id="f-grade"><option value="">전체</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
@@ -64,7 +69,7 @@
     <div class="cell-btns"><button type="button" class="primary" id="cell-save">저장하기</button><button type="button" class="danger" id="cell-del" hidden>이 기록 지우기</button></div>
   </div>
 </div>
-<script type="module" src="js/teacher.js?v=29"></script>
+<script type="module" src="js/teacher.js?v=30"></script>
 <div class="ver-foot" id="ver"></div>
 </body>
 </html>

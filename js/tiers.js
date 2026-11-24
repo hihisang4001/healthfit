@@ -1,6 +1,7 @@
 // 등급 계산 (순수 함수). 기준표는 setTable()로 주입한다 (브라우저: fetch, 테스트: 파일).
 export const TIERS = ['아이언', '브론즈', '실버', '골드', '플래티넘', '다이아몬드', '마스터', '그랜드마스터', '챌린저'];
-const LOWER_IS_BETTER = new Set(['run50']);
+import { LOWER } from './entry.js';
+const LOWER_IS_BETTER = LOWER;
 let table = null;
 export function setTable(t) { table = t; }
 

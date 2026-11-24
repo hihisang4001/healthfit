@@ -438,3 +438,27 @@ td.cell .plus{color:#9AA39D;font-size:22px;font-weight:700}
 .pin-dlg .pad button.ok{background:var(--track);color:#fff;border-color:transparent;font-size:24px;box-shadow:0 4px 0 var(--track-deep)}
 input#pin[readonly]{cursor:pointer;background:var(--paper)}
 .pin-dlg .disp{margin-top:34px}
+/* 검사방법 안내 (v30) */
+.gcard h3{font-family:var(--display);font-weight:900;font-size:22px;margin:0}
+.gcard .ghead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.gcard .garea{font-weight:700;color:var(--ink-soft);font-size:15px}
+.gtag{font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;background:#EEF2F8;color:var(--ink-soft)}
+.gtag.on{background:#DCEBFF;color:#1B4F9C}
+.gcard ol,#guide-box ul{margin:.3em 0 .6em;padding-left:1.4em;line-height:1.7}
+.gcard p{line-height:1.7;margin:.4em 0}
+.gcard .gsub{font-weight:700;margin-top:.8em}
+.gtable{width:100%;border-collapse:collapse;font-size:15px;margin:.3em 0}
+.gtable th,.gtable td{border:1px solid var(--rule);padding:6px 8px;text-align:center}
+.gtable thead th{background:#EEF2F8}
+.gtable tbody th{background:#F6F8FB;white-space:nowrap}
+.gcut{margin-top:.8em;padding-top:.6em;border-top:1px dashed var(--rule)}
+.gcut select{min-height:40px;font-size:16px}
+.gtable{table-layout:fixed}
+.gtable th,.gtable td{overflow-wrap:anywhere}
+@media (max-width:520px){.gtable{font-size:12px}.gtable th,.gtable td{padding:4px 3px}}
+/* 종목이 6개 이상일 때(v30): 어느 방향이든 2열로 나눠 담고 글자를 줄인다 */
+.items[data-n="6"],.items[data-n="7"],.items[data-n="8"],.items[data-n="9"]{}
+body[data-view=record] .items:not([data-n="1"]):not([data-n="2"]):not([data-n="3"]):not([data-n="4"]):not([data-n="5"]){grid-template-columns:1fr 1fr}
+body[data-view=record] .items:not([data-n="1"]):not([data-n="2"]):not([data-n="3"]):not([data-n="4"]):not([data-n="5"]) button{font-size:clamp(18px,min(4.4vw,5.2vh),48px);overflow-wrap:anywhere;word-break:normal;line-height:1.2}
+.items button[data-item=long_run]{--c:#0F8F9E;--cd:#0A646F}
+.items button[data-item=grip]{--c:#B03A8C;--cd:#7C2762}

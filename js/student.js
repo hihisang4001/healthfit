@@ -5,6 +5,7 @@ import { clearAuto } from './autoprep.js';
 import { playTier, unlock, isMuted, setMuted } from './sound.js';
 import { tierFor, bestOfDay, gradeKey, isImplausible } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
+import { LOWER, unitOf, keyLabel, dotEnabled, pressKey, parseEntry, needText } from './entry.js';
 import { startScan, normalize } from './qr.js';
 
 const root = document.getElementById('app');
@@ -75,13 +76,12 @@ async function startScanner() {
 $('cam-retry').addEventListener('click', () => location.reload());   // 멈춘 카메라 상태를 지우려면 화면을 새로 여는 것이 가장 확실하다
 
 function renderItems() {
-  const box = $('items'); box.replaceChildren(); box.classList.remove('has-pick'); box.hidden = false;
+  const box = $('items'); box.replaceChildren(); box.classList.remove('has-pick'); box.hidden = false; box.dataset.n = String(ITEMS.length);
   $('form').hidden = true; picked = null; $('rec-title').textContent = '오늘 측정한 항목을 골라요';
   for (const it of ITEMS) {
-    box.append(el('button', { 'data-item': it.key, 'aria-pressed': 'false', onclick: (ev) => pick(it, ev.currentTarget) }, it.label, el('div', { class: 'muted' }, `단위: ${it.unit}`)));
+    box.append(el('button', { 'data-item': it.key, 'aria-pressed': 'false', onclick: (ev) => pick(it, ev.currentTarget) }, it.label, el('div', { class: 'muted' }, `단위: ${unitOf(it)}`)));
   }
 }
-const decimalsOf = (it) => { const m = String(it.step).split('.')[1]; return m ? m.length : 0; };
 // 화면 안의 숫자 키패드: 기기 키보드는 쓰지 않는다
 function buildPad() {
   const pad = $('pad'); pad.replaceChildren();
@@ -90,25 +90,16 @@ function buildPad() {
 }
 function press(k) {
   resetAsk();
-  const v = $('value'); let t = v.value; $('form-error').textContent = '';
-  const dec = decimalsOf(picked);
-  if (k === '⌫') t = t.slice(0, -1);
-  else if (k === '.') { if (dec && t !== '' && t !== '-' && !t.includes('.')) t += '.'; }
-  else {
-    const frac = t.split('.')[1];
-    if (t.replace('-', '').replace('.', '').length >= 6) return;
-    if (frac !== undefined && frac.length >= dec) return;
-    t = (t === '0' ? '' : t === '-0' ? '-' : t) + k;
-  }
-  v.value = t;
+  const v = $('value'); $('form-error').textContent = '';
+  v.value = pressKey(picked, v.value, k);
 }
 function pick(it, btn) {
   picked = it;
   $('items').hidden = true; $('rec-title').textContent = '';
   $('form').hidden = false; $('form').dataset.item = it.key; $('form-error').textContent = '';
-  $('value-label').replaceChildren(it.label, el('small', {}, `단위: ${it.unit}`)); $('unit').textContent = it.unit;
+  $('value-label').replaceChildren(it.label, el('small', {}, `단위: ${unitOf(it)}`)); $('unit').textContent = unitOf(it);
   resetAsk(); $('minus').hidden = it.min >= 0; $('value').value = '';
-  $('pad').querySelector('[data-key="."]').disabled = !decimalsOf(it);
+  const dot = $('pad').querySelector('[data-key="."]'); dot.disabled = !dotEnabled(it); dot.textContent = keyLabel(it, '.'); dot.setAttribute('aria-label', it.mmss ? '콜론(분과 초 사이)' : '소수점');
 }
 $('pad') && buildPad();
 $('pad').addEventListener('click', (ev) => { const b = ev.target.closest('button[data-key]'); if (b && picked && !b.disabled) press(b.dataset.key); });
@@ -116,13 +107,12 @@ $('minus').addEventListener('click', () => { resetAsk(); const v = $('value'); v
 
 $('form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
-  const raw = $('value').value.trim().replace(',', '.');
-  const n = Number(raw);
-  if (raw === '' || !/^-?\d+(\.\d+)?$/.test(raw)) { $('form-error').textContent = '숫자를 눌러 입력해 주세요.'; return; }
-  if (n < picked.min || n > picked.max) { $('form-error').textContent = `${picked.min}부터 ${picked.max} 사이의 숫자를 입력해 주세요.`; return; }
+  const pe = parseEntry(picked, $('value').value);
+  if (pe.error) { $('form-error').textContent = pe.error; return; }
+  const raw = pe.send, n = pe.n, shown = $('value').value.trim();
   // 평소와 크게 다른 값: 큰 팝업으로 한 번 더 확인
   if (isImplausible(picked.key, gradeKey(me.grade, me.sex), n)) {
-    askConfirm(`정말 ${raw}${picked.unit}가 맞아요?`).then((yes) => { if (yes) doSave(raw, n); });
+    askConfirm(`정말 ${picked.mmss ? shown : raw}${picked.unit || ''}가 맞아요?`).then((yes) => { if (yes) doSave(raw, n); });
     return;
   }
   doSave(raw, n);
@@ -209,7 +199,7 @@ function showResult(rec, pending = false) {
     box.append(el('p', {}, '기록을 저장했어요. 등급을 보려면 선생님께 성별 등록을 요청하세요.'));
   } else {
     box.append(badge(t.index), el('div', { class: 'big' }, t.tier));
-    box.append(t.next ? el('p', { class: 'next-tier' }, badge(t.index + 1, true), el('span', {}, `${t.next.tier}까지 `, el('b', {}, `${t.next.needed}${it.unit}`), ` ${rec.item === 'run50' ? '더 빨리' : '더'} 필요해요!`)) : el('p', {}, '가장 높은 등급이에요! 대단해요!'));
+    box.append(t.next ? el('p', { class: 'next-tier' }, badge(t.index + 1, true), el('span', {}, `${t.next.tier}까지 `, el('b', {}, needText(it, t.next.needed)), ` ${LOWER.has(rec.item) ? '더 빨리' : '더'} 필요해요!`)) : el('p', {}, '가장 높은 등급이에요! 대단해요!'));
     const pm = me.peers && me.peers[rec.item], pt = pm && tierFor(rec.item, gradeKey(me.grade, me.sex), pm.mean);
     if (pt) box.append(el('div', { class: 'peer' }, '같은 학년·성별 친구 평균', badge(pt.index, true), el('b', {}, pt.tier)));   // 비교할 친구가 없으면 아무것도 보이지 않는다
   }
@@ -226,7 +216,7 @@ function chart(item, pts) {
   svg.setAttribute('viewBox', '0 0 300 110'); svg.setAttribute('class', 'chart'); svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `${itemOf(item).label} 기록 변화`);
   const vals = pts.map((p) => p.value), lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
-  const lower = item === 'run50';
+  const lower = LOWER.has(item);
   const xy = pts.map((p, i) => {
     const x = pts.length === 1 ? 150 : 20 + (260 * i) / (pts.length - 1);
     const f = (p.value - lo) / span, y = 90 - 70 * (lower ? 1 - f : f);
@@ -301,7 +291,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '29';
+const BUILD = '30';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);

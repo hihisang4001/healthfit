@@ -6,4 +6,6 @@ export const ITEMS = [
   { key: 'standing_jump', label: '제자리멀리뛰기', unit: 'cm', min: 0, max: 300, step: 1 },
   { key: 'sit_reach', label: '앉아윗몸앞으로굽히기', unit: 'cm', min: -30, max: 50, step: 0.1 },
   { key: 'run50', label: '50M 달리기', unit: '초', min: 5, max: 30, step: 0.01 },
+  { key: 'long_run', label: '오래달리기-걷기', unit: '', mmss: true, min: 100, max: 1800, step: 1 },
+  { key: 'grip', label: '악력', unit: 'kg', min: 0, max: 80, step: 0.1 },
 ];

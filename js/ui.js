@@ -16,7 +16,7 @@ export function badge(index, small = false) {
   return el('img', { class: `badge t${index}${small ? ' sm' : ''}`, src: new URL(`../assets/badges/${FILES[index]}.png`, import.meta.url).href, alt: TIERS[index] });
 }
 export function show(root, id) { document.body.dataset.view = id; root.querySelectorAll('[data-view]').forEach((v) => (v.hidden = v.dataset.view !== id)); }
-export function fmt(item, v) { return item === 'run50' ? v.toFixed(2) : String(v); }
+export { fmtValue as fmt } from './entry.js';
 
 // 브라우저 아래·위 막대를 뺀 '실제로 보이는 높이'를 재서 화면 높이로 쓴다 (사파리·웨일에서 100vh가 실제보다 큰 문제)
 function setAppH() { document.documentElement.style.setProperty('--app-h', `${window.innerHeight}px`); }
