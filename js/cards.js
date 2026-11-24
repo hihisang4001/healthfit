@@ -7,6 +7,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const gradeOf = (p) => String(p.grade || '').replace(/학년/g, '').trim();
 const colorOf = (g) => GRADE_COLORS[Number(g)] || '#5A6660';
 const inkOf = (g) => (Number(g) === 3 ? '#2A2000' : '#fff');   // 노란색(3학년) 위에는 진한 글씨
+const nameScale = (n) => { const k = [...String(n)].length; return k <= 4 ? 1 : k === 5 ? 0.8 : k === 6 ? 0.66 : 0.55; };   // 이름이 길면 줄인다
 const gdot = (g) => `<i class="gdot" style="background:${colorOf(g)}"></i>`;
 let roster = [], pvWake = null;
 
@@ -19,7 +20,7 @@ function qrSvg(text) {
 // 카드 한 장 (인쇄 카드와 휴대폰으로 보기가 같이 쓴다)
 function cardHTML(p) {
   const g = gradeOf(p), c = colorOf(g);
-  return `<div class="qcard" data-id="${esc(p.id)}" style="--gc:${c};--gt:${c}1F;--gi:${inkOf(g)}"><div>` +
+  return `<div class="qcard" data-id="${esc(p.id)}" style="--gc:${c};--gt:${c}1F;--gi:${inkOf(g)};--nf:${nameScale(p.name)}"><div>` +
     (g ? `<span class="gchip">${esc(g)}학년</span>` : '') +
     '<div class="school">내북초 아침 건강달리기</div>' +
     `<div class="nm">${esc(p.name)}</div><div class="code">${esc(p.id)}</div></div>` +

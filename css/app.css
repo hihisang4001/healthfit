@@ -1,3 +1,6 @@
+@font-face{font-family:'Black Han Sans';font-style:normal;font-weight:400;font-display:swap;src:url(../assets/fonts/BlackHanSans.woff2) format('woff2')}
+/* 제목 글꼴(Black Han Sans)은 굵기가 하나뿐이라 빠진 글자는 Noto Sans KR 900으로 이어 쓴다. 가짜 굵기는 만들지 않는다 */
+button,h1,h2,.brand,.net,.qcard,.dlg p,.load-text{font-synthesis:none}
 /* 밝은 바탕, 파란색 상단바와 버튼, 잔디 초록 포인트, 큰 글씨 */
 :root{--track:#1F5FBF;--track-deep:#143F82;--turf:#22704A;--turf-soft:#E4F0E8;--ink:#1C2420;--ink-soft:#5A6660;--paper:#F5F6F2;--card:#fff;--rule:#D9E0DA;--ok:#178A48;--bad:#C62828;--warn:#E2A400;
 --display:'Black Han Sans','Noto Sans KR','Malgun Gothic',sans-serif;--body:'Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color-scheme:light}
@@ -9,13 +12,13 @@ body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:
 .topbar .brand{font-family:var(--display);font-size:24px;letter-spacing:.5px;margin-right:auto}
 .topbar a{color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.55)}
 main{max-width:980px;margin:0 auto;padding:20px 16px 48px}
-h1{font-family:var(--display);font-weight:400;font-size:36px;line-height:1.2;margin:.1em 0;text-wrap:balance}
-h2{font-family:var(--display);font-weight:400;font-size:28px;margin:.4em 0}
+h1{font-family:var(--display);font-weight:900;font-size:36px;line-height:1.2;margin:.1em 0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:900;font-size:28px;margin:.4em 0}
 label{font-weight:700;font-size:16px;color:var(--ink-soft);display:grid;gap:6px}
 button{font:inherit;font-weight:700;color:var(--ink);border:2px solid var(--rule);border-radius:16px;background:var(--card);padding:14px 22px;min-height:60px;cursor:pointer;transition:transform .08s}
 button:active{transform:translateY(2px)}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--turf);outline-offset:2px}
-button.primary{border:0;background:var(--track);color:#fff;font-family:var(--display);font-weight:400;font-size:26px;min-height:68px;border-radius:18px;box-shadow:0 6px 0 var(--track-deep)}
+button.primary{border:0;background:var(--track);color:#fff;font-family:var(--display);font-weight:900;font-size:26px;min-height:68px;border-radius:18px;box-shadow:0 6px 0 var(--track-deep)}
 button.primary:active{transform:translateY(4px);box-shadow:0 2px 0 var(--track-deep)}
 button.ghost{background:var(--card)}
 button.danger{background:#FDECEC;color:var(--bad);border-color:#F2B8B8}
@@ -85,7 +88,7 @@ body[data-view=record] #form #minus{font-size:clamp(28px,6vmin,60px);padding:6px
 body[data-view=record] #form .error{min-height:0;margin:4px 0;font-size:clamp(16px,3vmin,28px)}body[data-view=record] #form .error:empty{display:none}
 
 /* 글씨체 통일: 모든 버튼·블록은 같은 제목 글꼴 */
-button,.items button .muted{font-family:var(--display);font-weight:400}
+button,.items button .muted{font-family:var(--display);font-weight:900}
 body[data-view=record] .items button .muted{font-size:.55em;opacity:.9}
 /* 간격 통일 */
 :root{--gap:12px}
@@ -121,7 +124,7 @@ body[data-view=record] .items.has-pick button .muted{font-size:.6em}
 /* 숫자 키패드 입력 화면 */
 body[data-view=record] #form{flex:1;min-height:0;padding:var(--gap);gap:var(--gap);background:var(--card)}
 body[data-view=record] #form[hidden]{display:none}
-body[data-view=record] #value-label{background:var(--c,var(--track));color:#fff;border-radius:18px;padding:12px 16px;text-align:center;font-family:var(--display);font-weight:400;font-size:clamp(24px,6vmin,56px);line-height:1.2}
+body[data-view=record] #value-label{background:var(--c,var(--track));color:#fff;border-radius:18px;padding:12px 16px;text-align:center;font-family:var(--display);font-weight:900;font-size:clamp(24px,6vmin,56px);line-height:1.2}
 #form[data-item=shuttle_run]{--c:#1E7BD8}#form[data-item=curl_up]{--c:#2E9E5B}#form[data-item=standing_jump]{--c:#E08A00}#form[data-item=sit_reach]{--c:#7A4CC2}#form[data-item=run50]{--c:#C4432B}
 .disp{display:flex;align-items:center;gap:12px}
 .disp input{flex:1;text-align:center;font-family:var(--display);font-size:clamp(44px,12vmin,120px);min-height:0;padding:6px 10px;border-radius:18px;border:3px solid var(--rule);background:var(--paper);caret-color:transparent}
@@ -150,7 +153,7 @@ body[data-view=record] #form #value-label small{font-size:.4em}
 }
 
 .peer{display:flex;align-items:center;justify-content:center;gap:12px;font-size:clamp(20px,3.6vmin,38px);font-weight:700;color:var(--ink-soft)}
-.peer b{color:var(--ink);font-family:var(--display);font-weight:400}
+.peer b{color:var(--ink);font-family:var(--display);font-weight:900}
 #undo{font-size:clamp(22px,4.4vmin,48px);min-height:0;padding:10px 24px;border-radius:18px;margin-top:1vmin;font-family:var(--display)}
 body[data-view=result] .result .badge{width:min(22vmin,220px);height:min(22vmin,220px)}
 body[data-view=result] .result .peer .badge{width:min(9vmin,84px);height:min(9vmin,84px)}
@@ -183,7 +186,7 @@ body[data-view=record] #form .pad button.del{font-size:clamp(24px,5.6vmin,60px)}
 .dlg{width:min(94vw,720px);background:#fff;border-radius:28px;padding:5vmin;box-shadow:0 12px 0 rgba(0,0,0,.18);display:grid;gap:4vmin;text-align:center}
 .dlg p{margin:0;font-family:var(--display);font-size:clamp(34px,8.5vmin,88px);line-height:1.25;word-break:keep-all;color:var(--ink)}
 .dlg-btns{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap,16px)}
-.dlg-btns button{min-height:0;padding:3.2vmin 8px;border-radius:20px;font-size:clamp(28px,6.4vmin,64px);font-family:var(--display);font-weight:400}
+.dlg-btns button{min-height:0;padding:3.2vmin 8px;border-radius:20px;font-size:clamp(28px,6.4vmin,64px);font-family:var(--display);font-weight:900}
 .dlg-btns button.primary{box-shadow:0 5px 0 var(--track-deep);font-size:clamp(28px,6.4vmin,64px);min-height:0}
 @media (orientation:portrait){.dlg-btns{grid-template-columns:1fr}.dlg-btns #confirm-yes{order:-1}}
 
@@ -270,21 +273,8 @@ body[data-view=result] .result .next-tier b{white-space:nowrap}
   .topbar a{padding:5px 10px;font-size:13px}
   .net{font-size:12px;padding:4px 9px;max-width:50vw}
 }
-/* 키가 작은 화면(작은 휴대폰 등): 키패드와 저장 버튼이 겹치지 않게 줄여서 배치 */
-@media (max-height:720px) and (orientation:portrait){
-  body[data-view=record] main{padding:6px}
-  body[data-view=record] .row .ghost,body[data-view=record] button[data-back]{min-height:0;padding:4px 14px;font-size:18px;border-radius:12px}
-  body[data-view=record] #form{gap:6px;padding:8px}
-  body[data-view=record] #form #value-label{font-size:30px;padding:6px 10px;gap:0}
-  body[data-view=record] #form #value-label small{font-size:.45em}
-  body[data-view=record] #form .disp input{font-size:48px;height:60px}
-  .pad{gap:6px}
-  body[data-view=record] #form .pad button{font-size:28px;border-radius:14px}
-  body[data-view=record] #form #save{font-size:26px;padding:8px}
-}
-
 .dlg{position:relative}
-.dlg-x{position:absolute;top:2vmin;right:2vmin;min-height:0;width:auto;padding:1.4vmin 3vmin;border-radius:16px;font-size:clamp(18px,3.2vmin,30px);font-family:var(--display);font-weight:400;background:#EEF2F8;color:var(--ink);box-shadow:none}
+.dlg-x{position:absolute;top:2vmin;right:2vmin;min-height:0;width:auto;padding:1.4vmin 3vmin;border-radius:16px;font-size:clamp(18px,3.2vmin,30px);font-family:var(--display);font-weight:900;background:#EEF2F8;color:var(--ink);box-shadow:none}
 #undone .dlg p{margin-top:6vmin}
 
 .mute{min-height:0;width:auto;padding:.3em .55em;border-radius:999px;border:2px solid rgba(255,255,255,.55);background:transparent;color:#fff;font-size:1rem;line-height:1;box-shadow:none}
@@ -344,3 +334,70 @@ body[data-view=result] .result .next-tier b{white-space:nowrap}
   main{padding:0!important;max-width:none}
   .sheet{grid-template-columns:repeat(2,85mm);gap:1.5mm 6mm;justify-content:center}
 }
+
+/* ══ 기록 입력(키패드) 화면: 아이패드 미니·휴대폰의 '실제로 보이는 높이'에 맞춘 배치 ══
+   (브라우저 아래 막대 때문에 보이는 높이가 1024보다 훨씬 작을 수 있어서, 높이는 JS가 잰 --app-h 를 쓴다)
+   키패드 버튼은 절대 이 높이 아래로 줄지 않고, 모자라면 화면 안에서 스크롤된다 */
+*{font-synthesis:none}
+:root{--app-h:100dvh;--key-min:64px}
+body[data-view=home] main,body[data-view=record] main,body[data-view=result] main,body[data-view=loading] main{height:calc(var(--app-h) - var(--top) - 26px)}
+body[data-view=record] #form{display:flex;flex-direction:column;gap:12px;padding:14px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+body[data-view=record] #form #value-label{flex:none;font-size:clamp(30px,5.6vmin,60px);padding:10px 14px;line-height:1.15;gap:0}
+body[data-view=record] #form #value-label small{font-size:.42em}
+body[data-view=record] #form .disp{flex:none}
+body[data-view=record] #form .disp input{font-size:clamp(52px,10vmin,110px);height:clamp(70px,13vmin,130px);padding:0 10px}
+body[data-view=record] #form .disp #unit{font-size:clamp(26px,5vmin,56px)}
+body[data-view=record] #form .pad{flex:1 0 auto;min-height:calc(4*var(--key-min) + 3*var(--gap));grid-auto-rows:minmax(var(--key-min),1fr)}
+body[data-view=record] #form .pad button{font-size:clamp(30px,6.5vmin,70px)}
+body[data-view=record] #form .pad button.del{font-size:clamp(24px,5vmin,52px)}
+body[data-view=record] #form #save{flex:none;font-size:clamp(28px,5.4vmin,60px);padding:12px}
+@media (max-height:780px){
+  :root{--key-min:52px}
+  body[data-view=record] #form{gap:8px;padding:10px}
+  body[data-view=record] #form #value-label{font-size:clamp(24px,4.6vmin,44px);padding:6px 12px}
+  body[data-view=record] #form .disp input{font-size:clamp(44px,8vmin,80px);height:clamp(56px,10vmin,96px)}
+  body[data-view=record] #form #save{padding:8px}
+  .pad{gap:8px}
+}
+@media (orientation:landscape) and (min-width:560px){
+  body[data-view=record] #form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto 1fr;gap:var(--gap)}
+  body[data-view=record] #form #value-label{grid-column:1;grid-row:1;font-size:clamp(24px,5.6vmin,56px)}
+  body[data-view=record] #form .disp{grid-column:1;grid-row:2}
+  body[data-view=record] #form .disp input{font-size:clamp(48px,11vmin,110px);height:clamp(64px,14vmin,130px)}
+  body[data-view=record] #form .error{grid-column:1;grid-row:3}
+  body[data-view=record] #form #save{grid-column:1;grid-row:4;align-self:stretch;max-height:220px;min-height:64px;font-size:clamp(28px,6vmin,64px)}
+  body[data-view=record] #form .pad{grid-column:2;grid-row:1 / -1;min-height:0}
+  body[data-view=record] #form .pad button{font-size:clamp(28px,6vmin,64px)}
+}
+@media (orientation:landscape) and (max-height:520px){:root{--key-min:40px}}
+
+/* 교사용 표: 아이패드 미니 세로에서 한 화면에 들어오게 줄이고, 그래도 넘치면 카드 안에서만 옆으로 민다 */
+table th{font-size:14px;line-height:1.25;overflow-wrap:anywhere;padding:8px 4px}
+table td{padding:8px 4px}
+td.name{white-space:normal}
+td.name button{min-height:0;padding:6px 12px;font-size:17px;border-radius:12px;max-width:100%}
+table .badge.sm{width:48px;height:48px}
+.card[style*=overflow]{-webkit-overflow-scrolling:touch}
+/* QR 카드 이름: 글자가 많으면 줄여서 카드 안에 맞춘다 */
+.qcard .nm{font-size:calc(34px*var(--nf,1));white-space:nowrap}
+.pv-card .qcard .nm{font-size:calc(var(--u)*11*var(--nf,1))}
+
+/* 작은 휴대폰: 상단 줄(이름·인터넷 상태·소리·탭)이 한 줄에 들어오게 */
+@media (max-width:520px){
+  .net{max-width:34vw}
+  .mute{padding:.25em .45em}
+  .topbar a{padding:5px 8px}
+  .topbar .brand{min-width:2ch}
+}
+/* 낮은 가로 화면(휴대폰 가로): 상단 줄을 낮춘다 */
+@media (orientation:landscape) and (max-height:520px){
+  :root{--top:48px}
+  .topbar{padding:6px 12px}
+  .topbar .brand{font-size:18px}
+  .topbar a,.net,.mute{font-size:13px;padding-top:3px;padding-bottom:3px}
+  body[data-view=record] .row button,body[data-view=record] button[data-back]{padding:2px 12px;font-size:16px}
+  body[data-view=record] h2{font-size:18px}
+  body[data-view=record] main{padding:6px}
+}
+body[data-view=record] section[data-view=record] > .row{flex:none}
+body[data-view=record] #form .pad button.del{white-space:nowrap;font-size:clamp(20px,4.4vmin,48px)}
