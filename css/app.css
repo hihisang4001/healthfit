@@ -406,7 +406,7 @@ label.check{display:flex;align-items:flex-start;gap:10px;font-size:15px;font-wei
 label.check input{width:22px;height:22px;min-height:0;padding:0;margin:2px 0 0;flex:none;accent-color:var(--turf)}
 
 /* 교사용 현황판: 학생 이름은 학년 색(QR 카드와 같은 색), 등급 분포는 티어 배지와 함께 */
-td.name button.gname{background:var(--gc);color:var(--gi);border:0;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+td.name button.gname{background:var(--gc);color:var(--gi);border:0;font-family:var(--body);font-weight:700;box-shadow:0 3px 0 rgba(0,0,0,.18)}
 .legend{align-items:flex-start;gap:4px}
 .legend div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.78rem;font-weight:700;color:var(--ink-soft);min-width:0}
 .legend .badge.sm{width:52px;height:52px}
