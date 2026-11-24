@@ -462,3 +462,9 @@ body[data-view=record] .items:not([data-n="1"]):not([data-n="2"]):not([data-n="3
 body[data-view=record] .items:not([data-n="1"]):not([data-n="2"]):not([data-n="3"]):not([data-n="4"]):not([data-n="5"]) button{font-size:clamp(18px,min(4.4vw,5.2vh),48px);overflow-wrap:anywhere;word-break:normal;line-height:1.2}
 .items button[data-item=long_run]{--c:#0F8F9E;--cd:#0A646F}
 .items button[data-item=grip]{--c:#B03A8C;--cd:#7C2762}
+
+/* v31 검사방법 안내: 이름칩 */
+.gchips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.gchip{min-height:44px;padding:8px 14px;border-radius:999px;border:2px solid var(--rule);background:#fff;font:700 16px var(--body);color:var(--ink);cursor:pointer}
+.gchip.on{background:var(--track);border-color:var(--track);color:#fff}
+.gcard[hidden]{display:none}
