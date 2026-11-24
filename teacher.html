@@ -8,7 +8,7 @@
 <link rel="preload" href="assets/fonts/BlackHanSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=22">
+<link rel="stylesheet" href="css/app.css?v=23">
 </head>
 <body>
 <header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="cards.html">QR 카드</a><a href="index.html">학생용</a></header>
@@ -34,7 +34,11 @@
     <div class="card"><h2>등급 분포</h2><div class="bars" id="bars"></div><div class="legend" id="legend"></div></div>
     <div class="card" style="overflow:auto"><table id="table"></table></div>
     <div class="card row"><span class="grow muted">새 학년이 되면 전체 학년을 한 칸씩 올립니다. 6학년은 졸업 처리되고 기록은 시트에 남습니다.</span><button class="danger" id="promote">학년 올리기</button></div>
-    <div class="card row"><span class="grow muted">인터넷이 불안정한 곳에서 쓸 태블릿이라면, 수업 전에 한 번 눌러서 학생 명단을 이 태블릿에 저장해 두세요. (이 태블릿에만 저장됩니다)</span><button id="offline-prep">오프라인 준비</button></div>
+    <div class="card">
+      <div class="row"><span class="grow muted">인터넷이 불안정한 곳에서 쓸 태블릿이라면, 학생 명단을 이 태블릿에 저장해 두세요. (이 태블릿에만 저장됩니다)</span><button id="offline-prep">오프라인 준비</button></div>
+      <p class="muted" id="prep-at" role="status"></p>
+      <label class="check"><input type="checkbox" id="auto-on"><span>이 태블릿에서 자동으로 최신 명단 받기 (인터넷이 될 때 6시간마다. 교사용 비밀번호가 이 태블릿에 저장돼요)</span></label>
+    </div>
     <p class="muted" id="dash-note" role="status"></p>
     <p class="error" id="dash-error" role="alert"></p>
   </section>
@@ -52,7 +56,7 @@
     <div class="card" style="overflow:auto"><table id="s-table"></table></div>
   </section>
 </main>
-<script type="module" src="js/teacher.js?v=22"></script>
+<script type="module" src="js/teacher.js?v=23"></script>
 <div class="ver-foot" id="ver"></div>
 </body>
 </html>
