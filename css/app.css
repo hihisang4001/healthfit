@@ -468,3 +468,14 @@ body[data-view=record] .items:not([data-n="1"]):not([data-n="2"]):not([data-n="3
 .gchip{min-height:44px;padding:8px 14px;border-radius:999px;border:2px solid var(--rule);background:#fff;font:700 16px var(--body);color:var(--ink);cursor:pointer}
 .gchip.on{background:var(--track);border-color:var(--track);color:#fff}
 .gcard[hidden]{display:none}
+
+/* v33 저장 중 안내 */
+.cell-dlg{position:relative}
+.cell-busy{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(255,255,255,.96);border-radius:inherit;text-align:center}
+.cell-busy[hidden]{display:none}
+.cell-busy p{margin:0;font:900 clamp(24px,5vw,34px) var(--display);color:var(--ink)}
+.cell-busy.ok p{color:var(--ok)}
+.cell-busy .spinner{width:56px;height:56px;border:6px solid var(--rule);border-top-color:var(--track);border-radius:50%;animation:hfspin .9s linear infinite}
+.cell-busy .spinner[hidden]{display:none}
+@keyframes hfspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.cell-busy .spinner{animation-duration:2.5s}}

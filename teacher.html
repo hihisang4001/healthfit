@@ -8,7 +8,7 @@
 <link rel="preload" href="assets/fonts/BlackHanSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=32">
+<link rel="stylesheet" href="css/app.css?v=33">
 </head>
 <body>
 <header class="topbar"><span class="brand">건강체력 증진 도우미</span><a href="cards.html">QR 카드</a><a href="index.html">학생용</a></header>
@@ -32,10 +32,7 @@
     <div class="card banner" id="backup-banner" hidden><span>학기가 끝났어요. 구글 시트를 <b>사본 만들기</b>로 한 번 저장해 두세요.</span><button class="ghost" id="banner-close">확인했어요</button></div>
     <div class="card row">
       <label class="grow">학년<select id="f-grade"><option value="">전체</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
-      <label class="grow">성별<select id="f-sex"><option value="">전체</option><option>남</option><option>여</option></select></label>
-      <label class="grow">분포 항목<select id="f-item"></select></label>
     </div>
-    <div class="card"><h2>등급 분포</h2><div class="bars" id="bars"></div><div class="legend" id="legend"></div></div>
     <div class="card" style="overflow:auto"><table id="table"></table></div>
     <div class="card row"><span class="grow muted">새 학년이 되면 전체 학년을 한 칸씩 올립니다. 6학년은 졸업 처리되고 기록은 시트에 남습니다.</span><button class="danger" id="promote">학년 올리기</button></div>
     <div class="card"><span class="muted">인터넷이 끊겨도 쓸 수 있게, 이 화면에서 명단을 받아 올 때마다 이 태블릿에 자동으로 저장돼요. 비밀번호는 저장하지 않아요.</span>
@@ -66,10 +63,11 @@
     <p class="muted" id="cell-note"></p>
     <div class="pad" id="cell-pad"></div>
     <p class="error" id="cell-error" role="alert"></p>
+    <div class="cell-busy" id="cell-busy" role="status" aria-live="polite" hidden><div class="spinner" id="cell-spin"></div><p id="cell-busy-msg"></p></div>
     <div class="cell-btns"><button type="button" class="primary" id="cell-save">저장하기</button><button type="button" class="danger" id="cell-del" hidden>이 기록 지우기</button></div>
   </div>
 </div>
-<script type="module" src="js/teacher.js?v=32"></script>
+<script type="module" src="js/teacher.js?v=33"></script>
 <div class="ver-foot" id="ver"></div>
 </body>
 </html>

@@ -22,8 +22,8 @@ function curTier(s, item) {
   return { rec, t: tierFor(item, gradeKey(s.grade, s.sex), rec.value) };
 }
 function filtered() {
-  const g = $('f-grade').value, x = $('f-sex').value;
-  return roster.filter((s) => (!g || String(s.grade) === g) && (!x || s.sex === x));
+  const g = $('f-grade').value;
+  return roster.filter((s) => !g || String(s.grade) === g);
 }
 
 const store = makeStore(window.localStorage);
@@ -46,10 +46,6 @@ function renderDash() {
     }
     table.append(tr);
   }
-  const key = $('f-item').value, counts = new Array(9).fill(0);
-  for (const s of list) { const { t } = curTier(s, key); if (t) counts[t.index]++; }
-  const max = Math.max(1, ...counts), bars = $('bars'), legend = $('legend'); bars.replaceChildren(); legend.replaceChildren();
-  counts.forEach((c, i) => { bars.append(el('div', { style: `height:${(c / max) * 100}%`, title: `${TIERS[i]} ${c}명` }, el('span', {}, c || ''))); legend.append(el('div', {}, badge(i, true), el('span', {}, TIERS[i]))); });
 }
 function openStudent(s) {
   current = s; $('s-error').textContent = '';
@@ -141,13 +137,17 @@ $('cell-save').addEventListener('click', async () => {
   const pe = parseEntry(it, shown);
   if (pe.error) { $('cell-error').textContent = pe.error; return; }
   const raw = pe.send;
-  $('cell-save').disabled = true;
+  const was = cellCur.rec;
+  $('cell-save').disabled = true; $('cell-busy').hidden = false; $('cell-spin').hidden = false; $('cell-busy').className = 'cell-busy';
+  $('cell-busy-msg').textContent = '데이터 업로드 중';
   try {
-    if (cellCur.rec) await api.teacherUpdate(pin, cellCur.rec.recordId, { value: raw, date });
+    if (was) await api.teacherUpdate(pin, was.recordId, { value: raw, date });
     else await api.teacherAdd(pin, { id: s.id, date, item: it.key, value: raw });
-    await load(); renderDash(); $('dash-note').textContent = `${s.name} · ${it.label} ${shown}${it.unit}을(를) ${cellCur.rec ? '고쳤어요' : '저장했어요'}.`; closeCell();
+    await load(); renderDash(); $('dash-note').textContent = `${s.name} · ${it.label} ${shown}${it.unit}을(를) ${was ? '고쳤어요' : '저장했어요'}.`;
+    $('cell-spin').hidden = true; $('cell-busy').className = 'cell-busy ok'; $('cell-busy-msg').textContent = '저장되었습니다!';
+    await new Promise((r) => setTimeout(r, 900)); closeCell();
   } catch (e) { $('cell-error').textContent = e.message; }
-  finally { $('cell-save').disabled = false; }
+  finally { $('cell-busy').hidden = true; $('cell-save').disabled = false; }
 });
 $('cell-del').addEventListener('click', async () => {
   const b = $('cell-del');
@@ -162,7 +162,7 @@ $('login').addEventListener('submit', async (ev) => {
   catch (e) { pin = ''; $('login-error').textContent = e.message; }
 });
 $('add').addEventListener('submit', (ev) => { ev.preventDefault(); run(() => api.teacherAdd(pin, { id: current.id, date: $('a-date').value, item: $('a-item').value, value: $('a-value').value })).then(() => { $('a-value').value = ''; }); });
-['f-grade', 'f-sex', 'f-item'].forEach((id) => $(id).addEventListener('change', renderDash));
+$('f-grade').addEventListener('change', renderDash);
 $('reload').addEventListener('click', async () => { try { await load(); renderDash(); } catch (e) { $('dash-error').textContent = e.message; } });
 $('logout').addEventListener('click', () => { pin = ''; roster = []; records = []; show(root, 'login'); });
 $('promote').addEventListener('click', async () => {
@@ -184,7 +184,7 @@ $('s-back').addEventListener('click', () => { renderDash(); show(root, 'dash'); 
 $('open-guide').addEventListener('click', () => { renderGuide($('guide-box')); show(root, 'guide'); window.scrollTo(0, 0); });
 $('guide-back').addEventListener('click', () => show(root, 'dash'));
 
-for (const sel of [$('f-item'), $('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, sel.id === 'a-item' && it.mmss ? `${it.label} (초 단위로 입력)` : it.label));
-$('ver').textContent = 'v32';
+for (const sel of [$('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, sel.id === 'a-item' && it.mmss ? `${it.label} (초 단위로 입력)` : it.label));
+$('ver').textContent = 'v33';
 await loadTable();
 attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력
