@@ -217,22 +217,37 @@ function showResult(rec, pending = false) {
   if (t) playTier(t.index);
 }
 
+const md = (d) => { const m = /^\d{4}-(\d{2})-(\d{2})/.exec(d); return m ? `${Number(m[1])}/${Number(m[2])}` : d; };
 function chart(item, pts) {
-  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 300 110'); svg.setAttribute('class', 'chart'); svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', `${itemOf(item).label} 기록 변화`);
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), it = itemOf(item);
+  const W = 320, H = 170, L = 46, R = 24, T = 26, B = 36;   // 왼쪽·아래는 축 숫자 자리
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'chart'); svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', `${it.label} 기록 변화`);
+  const mk = (tag, at, txt) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(at)) n.setAttribute(k, v); if (txt !== undefined) n.textContent = txt; svg.append(n); return n; };
   const vals = pts.map((p) => p.value), lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
-  const lower = LOWER.has(item);
-  const xy = pts.map((p, i) => {
-    const x = pts.length === 1 ? 150 : 20 + (260 * i) / (pts.length - 1);
-    const f = (p.value - lo) / span, y = 90 - 70 * (lower ? 1 - f : f);
-    return [x, y];
+  const lower = LOWER.has(item), yTop = T, yBot = H - B;
+  const yOf = (v) => { const f = hi === lo ? 0.5 : (v - lo) / span; return yBot - (yBot - yTop) * (lower ? 1 - f : f); };
+  const xOf = (i) => (pts.length === 1 ? (L + W - R) / 2 : L + ((W - L - R) * i) / (pts.length - 1));
+  // 축 선과 Y축 숫자(위 = 더 좋은 쪽 끝, 아래 = 다른 쪽 끝)
+  mk('line', { x1: L, y1: yTop - 6, x2: L, y2: yBot + 6, stroke: '#9AA6A0', 'stroke-width': 1 });
+  mk('line', { x1: L, y1: yBot + 6, x2: W - R, y2: yBot + 6, stroke: '#9AA6A0', 'stroke-width': 1 });
+  const best = lower ? lo : hi, worst = lower ? hi : lo;
+  mk('text', { x: L - 5, y: yTop + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#5A6660' }, fmt(item, best));
+  if (hi !== lo) mk('text', { x: L - 5, y: yBot + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#5A6660' }, fmt(item, worst));
+  mk('text', { x: 4, y: 12, 'font-size': 11, fill: '#5A6660' }, it.unit || '');
+  const xy = pts.map((p, i) => [xOf(i), yOf(p.value)]);
+  mk('polyline', { points: xy.map((q) => q.join(',')).join(' '), fill: 'none', stroke: '#22704A', 'stroke-width': 3 });
+  xy.forEach(([x, y], i) => {
+    mk('circle', { cx: x, cy: y, r: 5, fill: '#C4432B' });
+    mk('text', { x, y: y - 9, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: '#1C2420' }, fmt(item, pts[i].value));   // 점 위: 측정값(Y)
+    mk('line', { x1: x, y1: yBot + 6, x2: x, y2: yBot + 10, stroke: '#9AA6A0', 'stroke-width': 1 });
+    mk('text', { x, y: yBot + 22, 'text-anchor': 'middle', 'font-size': 11, fill: '#5A6660' }, md(pts[i].date));   // 점 아래: 날짜(X)
   });
-  const line = document.createElementNS(NS, 'polyline');
-  line.setAttribute('points', xy.map((q) => q.join(',')).join(' ')); line.setAttribute('fill', 'none'); line.setAttribute('stroke', '#22704A'); line.setAttribute('stroke-width', '3');
-  svg.append(line);
-  xy.forEach(([x, y]) => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 5); c.setAttribute('fill', '#C4432B'); svg.append(c); });
   return svg;
+}
+function recordTable(it, pts) {
+  const rows = pts.map((r) => { const t = tierOf(r); return el('tr', {}, el('td', {}, r.date), el('td', {}, `${fmt(it.key, r.value)}${it.unit}`), el('td', {}, t ? el('span', { class: 'tcell' }, badge(t.index, true), t.tier) : '준비 중')); });
+  return el('table', { class: 'rtable' }, el('thead', {}, el('tr', {}, el('th', {}, '날짜'), el('th', {}, '측정값'), el('th', {}, '등급'))), el('tbody', {}, ...rows));
 }
 function renderMine() {
   const box = $('mine'); box.replaceChildren();
@@ -241,7 +256,7 @@ function renderMine() {
     const pts = mine.filter((r) => r.item === it.key), card = el('div', { class: 'card' });
     const last = pts[pts.length - 1], t = last && tierOf(last);
     card.append(el('div', { class: 'head' }, t ? badge(t.index, true) : '', el('div', {}, el('strong', {}, it.label), el('div', { class: 'muted' }, last ? `${t ? t.tier : '등급 준비 중'} · 최근 ${fmt(it.key, last.value)}${it.unit}` : '아직 기록이 없어요'))));
-    if (pts.length) card.append(chart(it.key, pts), el('div', { class: 'muted' }, `${pts[0].date} → ${last.date}`));
+    if (pts.length) card.append(chart(it.key, pts), recordTable(it, pts));
     box.append(card);
   }
 }
@@ -297,7 +312,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '38';
+const BUILD = '39';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);

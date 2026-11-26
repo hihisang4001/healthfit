@@ -502,3 +502,11 @@ body[data-view=record] #form[data-item=grip] .disp #unit,body[data-view=record] 
 }
 .cell-dlg .disp input{min-width:0}
 .cell-dlg #cell-disp2 #cell-unit2{font-family:var(--body);font-weight:900;font-size:24px;color:var(--ink-soft);min-width:1.6em}
+
+/* v39 내 기록: 그래프 축 숫자 + 기록 표 */
+svg.chart{height:auto;aspect-ratio:320/170}
+.rtable{width:100%;border-collapse:collapse;margin-top:8px;font-size:16px}
+.rtable th,.rtable td{border-bottom:1px solid var(--rule);padding:6px 8px;text-align:center}
+.rtable thead th{background:#EEF2F8;font-weight:700}
+.rtable .tcell{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.rtable .badge.sm{width:34px;height:34px}
