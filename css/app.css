@@ -525,3 +525,24 @@ svg.chart{height:auto;aspect-ratio:320/170}
 .rtable td:first-child{white-space:nowrap}
 .rtable .tcell{white-space:nowrap}
 .tier-strip .ts{font-size:clamp(10px,1.55vw,15px);letter-spacing:-.03em}
+
+/* v41 교사용 현황판: 반 전체 줄·정렬·▲·상세 창·요약 */
+#table th.sortable{cursor:pointer;user-select:none}#table th.sortable:hover{color:var(--ink)}.sortmark{color:var(--turf)}
+#table b.up{color:#C4432B;font-size:.95em}
+#table tfoot th{text-align:left;background:#F3F7FB;position:static}
+#table tfoot td{background:#F3F7FB;vertical-align:top;font-size:.95rem}
+#table tr.sumrow:first-child th,#table tr.sumrow:first-child td{border-top:3px solid var(--rule)}
+.dist{display:flex;flex-wrap:wrap;gap:4px 8px;justify-content:center}
+.dist .dc{display:inline-flex;align-items:center;gap:2px}.dist .badge.sm{width:30px;height:30px}.dist b{font-size:15px}
+.det-dlg{width:min(96vw,640px)}
+.det-dlg .det-body{display:grid;gap:10px}
+.det-dlg svg.chart{width:100%}
+.det-dlg .legend{font-size:13px}
+.det-dlg .rtable{font-size:15px}
+#s-summary .summary{display:grid;gap:8px;margin-bottom:12px}
+#s-summary .summary p{font-family:var(--body);font-size:18px;margin:0;word-break:keep-all}
+.sum-line{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.sum-cell{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:clamp(10px,1.7vw,14px);font-weight:700;line-height:1.15;min-width:0}
+.sum-cell span{overflow-wrap:anywhere}.sum-cell .badge.sm{width:clamp(30px,6vw,52px);height:clamp(30px,6vw,52px)}
+.summary .good{color:#22704A}.summary .weak{color:#C4432B}
+.mine.charts{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}

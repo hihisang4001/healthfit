@@ -1,23 +1,23 @@
 import { attachPinPad } from './pinpad.js';
 import { api } from './api.js';
 import { ITEMS } from './config.js';
-import { TIERS, tierFor, latestBest, gradeKey } from './tiers.js';
+import { TIERS, tierFor, latestBest, gradeKey, bestOfDay } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
-import { bestOfDay } from './tiers.js';
 import { makeStore } from './offline.js';
 import { gradeColor, gradeInk } from './grades.js';
 import { LOWER, unitOf, keyLabel, dotEnabled, pressKey, parseEntry, entryText, TWO_HAND, parseHands, splitLR } from './entry.js';
 import { savePrep, prepLabel } from './autoprep.js';
 import { renderGuide } from './guide.js';
+import { dateList, recFor, tierUp, itemStats, groupAvg, strengths, lineChart, recTable, fmtAvg } from './classview.js';
 
 const root = document.getElementById('app');
 const $ = (id) => document.getElementById(id);
-let pin = '', roster = [], records = [], current = null, undoInfo = null;
+let pin = '', roster = [], records = [], current = null, undoInfo = null, viewDate = '', sortKey = '', sortDir = 0;
 const itemOf = (k) => ITEMS.find((i) => i.key === k);
 const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
 
 function curTier(s, item) {
-  const rec = latestBest(records.filter((r) => r.id === s.id), item);
+  const rec = recFor(records, s.id, item, viewDate);
   if (!rec) return { rec: null };
   return { rec, t: tierFor(item, gradeKey(s.grade, s.sex), rec.value) };
 }
@@ -31,7 +31,7 @@ async function load() {
   $('dash-error').textContent = '';
   const d = await api.teacherList(pin);
   roster = d.roster; records = d.records; undoInfo = d.undo || null; undoUI();
-  savePrep(store, window.localStorage, roster, records); prepUI();   // 받아 올 때마다 이 태블릿에 자동 저장 (오프라인용)
+  dateSelUI(); savePrep(store, window.localStorage, roster, records); prepUI();   // 받아 올 때마다 이 태블릿에 자동 저장 (오프라인용)
 }
 /* ── 티어 이미지 위에 마우스를 올리거나(태블릿은 길게 누르면) 측정한 날짜를 네모 상자로 보여 준다 ── */
 let tipEl = null, tipHoldUntil = 0, tipTimer = null;
@@ -66,20 +66,71 @@ function handMark(it, rec) {
   const l = Number(lr[0]), r = Number(lr[1]);
   return l === r ? ' (양손 같음)' : l > r ? ' (왼)' : ' (오)';
 }
+function dateSelUI() {   // 측정 날짜 전환: 최신 + 기록에 있는 날짜들
+  const sel = $('f-date'), ds = dateList(records);
+  if (viewDate && !ds.includes(viewDate)) viewDate = '';
+  sel.replaceChildren(el('option', { value: '' }, '최신 기록'), ...ds.map((d) => el('option', { value: d }, dateText(d))));
+  sel.value = viewDate;
+}
 function renderDash() {
   const list = filtered(), table = $('table'); table.replaceChildren();
-  table.append(el('tr', {}, el('th', {}, '이름'), el('th', {}, '학년'), ...ITEMS.map((i) => el('th', {}, i.label))));
-  for (const s of list) {
+  const rowsOf = (it) => list.map((s) => ({ s, ...curTier(s, it.key) }));
+  const byItem = new Map(ITEMS.map((it) => [it.key, rowsOf(it)]));
+  let order = list;
+  if (sortKey && sortDir) {   // 종목 제목을 누르면 등급순(같으면 기록순), 기록 없는 학생은 항상 맨 아래
+    const it = itemOf(sortKey), lower = LOWER.has(sortKey), rows = byItem.get(sortKey);
+    const rank = (r) => (r.rec && r.t ? [r.t.index, lower ? -r.rec.value : r.rec.value] : null);
+    order = rows.map((r, i) => ({ r, i, k: rank(r) })).sort((x, y) => {
+      if (!x.k && !y.k) return x.i - y.i; if (!x.k) return 1; if (!y.k) return -1;
+      return (sortDir > 0 ? y.k[0] - x.k[0] || y.k[1] - x.k[1] : x.k[0] - y.k[0] || x.k[1] - y.k[1]) || x.i - y.i;
+    }).map((o) => o.r.s);
+  }
+  const head = (it) => el('th', { class: 'sortable', tabindex: '0', role: 'button', 'aria-label': `${it.label} 등급순 정렬`, onclick: () => sortBy(it.key) }, it.label, sortKey === it.key && sortDir ? el('span', { class: 'sortmark' }, sortDir > 0 ? ' ▼' : ' ▲') : '');
+  table.append(el('thead', {}, el('tr', {}, el('th', {}, '이름'), el('th', {}, '학년'), ...ITEMS.map(head))));
+  const tb = el('tbody', {});
+  for (const s of order) {
     const tr = el('tr', {}, el('td', { class: 'name' }, el('button', { class: 'ghost gname', style: `--gc:${gradeColor(s.grade)};--gi:${gradeInk(s.grade)}`, onclick: () => openStudent(s) }, s.name)), el('td', {}, `${s.grade}`));
     for (const it of ITEMS) {
       const { rec, t } = curTier(s, it.key);
-      const open = () => { if (Date.now() < tipHoldUntil) return; openCell(s, it); };
-      tr.append(el('td', { class: 'cell', tabindex: '0', role: 'button', 'aria-label': `${s.name} ${it.label} 기록 입력`, onclick: open, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } },
-        !rec ? el('span', { class: 'plus' }, '＋') : !s.sex ? '성별 필요' : el('div', {}, withTip(badge(t.index, true), `${TIERS[t.index]} · ${dateText(rec.date)} 측정`), el('div', { class: 'muted' }, `${fmt(it.key, rec.value)}${it.unit}${handMark(it, rec)}`))));
+      const open = () => { if (Date.now() < tipHoldUntil) return; openDetail(s, it); };
+      const up = rec && t && tierUp(records, s, it.key, rec, t.index);
+      tr.append(el('td', { class: 'cell', tabindex: '0', role: 'button', 'aria-label': `${s.name} ${it.label} 자세히 보기`, onclick: open, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } },
+        !rec ? el('span', { class: 'plus' }, '＋') : !s.sex ? '성별 필요' : el('div', {}, withTip(badge(t.index, true), `${TIERS[t.index]} · ${dateText(rec.date)} 측정`), el('div', { class: 'muted' }, `${fmt(it.key, rec.value)}${it.unit}${handMark(it, rec)}`, up ? el('b', { class: 'up', title: '이전 측정보다 등급이 올랐어요' }, ' ▲') : ''))));
     }
-    table.append(tr);
+    tb.append(tr);
   }
+  table.append(tb);
+  // 맨 아래 반 전체 줄: 등급 분포, 평균, 최고 기록
+  const st = new Map(ITEMS.map((it) => [it.key, itemStats(byItem.get(it.key), it.key)]));
+  const mkRow = (label, cellOf) => el('tr', { class: 'sumrow' }, el('th', { colspan: 2 }, label), ...ITEMS.map((it) => el('td', {}, cellOf(it, st.get(it.key)))));
+  table.append(el('tfoot', {},
+    mkRow('등급 분포', (it, x) => (x.n ? el('div', { class: 'dist' }, ...x.counts.map((c, i) => (c ? el('span', { class: 'dc', title: `${TIERS[i]} ${c}명` }, badge(i, true), el('b', {}, c)) : '')).filter(Boolean)) : '–')),
+    mkRow('반 평균', (it, x) => (x.n ? `${fmtAvg(it.key, x.avg)}${it.unit}` : '–')),
+    mkRow('최고 기록', (it, x) => (x.best ? el('div', {}, `${fmt(it.key, x.best.rec.value)}${it.unit}`, el('div', { class: 'muted' }, x.best.s.name + (x.best.more ? ` 외 ${x.best.more}명` : ''))) : '–'))));
 }
+function sortBy(key) {   // 한 번: 높은 등급순, 두 번: 낮은 등급순, 세 번: 원래 순서
+  if (sortKey !== key) { sortKey = key; sortDir = 1; } else if (sortDir === 1) sortDir = -1; else { sortKey = ''; sortDir = 0; }
+  renderDash();
+}
+/* ── 칸 자세히 보기: 학생용 [내 기록]과 같은 그래프·표 + 같은 학년·성별 평균 비교선 ── */
+let detCur = null;
+function openDetail(s, it) {
+  detCur = { s, it };
+  $('det-title').textContent = `${s.name} · ${it.label}`;
+  const box = $('det-body'); box.replaceChildren();
+  const pts = bestOfDay(records.filter((r) => r.id === s.id && r.item === it.key)).sort((a, b) => a.date.localeCompare(b.date));
+  if (!pts.length) box.append(el('p', { class: 'muted' }, '아직 기록이 없어요.'));
+  else if (!s.sex) box.append(el('p', { class: 'muted' }, '성별이 없어 등급을 알 수 없어요.'), recTable(it, pts, s));
+  else {
+    const avg = groupAvg(roster, records, s, it.key);
+    box.append(lineChart(it, pts, avg), el('p', { class: 'muted legend' }, avg.size ? '● 빨간 점·초록 선: 이 학생  ○ 회색 점선: 같은 학년·성별 평균' : '같은 학년·성별 비교 인원이 부족해요(그날 2명 이상 측정해야 보여요).'), recTable(it, pts, s, avg));
+  }
+  $('detail').hidden = false;
+}
+function closeDetail() { $('detail').hidden = true; detCur = null; }
+$('det-close').addEventListener('click', closeDetail);
+$('detail').addEventListener('click', (ev) => { if (ev.target === $('detail')) closeDetail(); });
+$('det-input').addEventListener('click', () => { const { s, it } = detCur; closeDetail(); openCell(s, it); });
 function openStudent(s) {
   current = s; $('s-error').textContent = '';
   $('s-title').textContent = `${s.name} (${s.grade}학년${s.sex ? ' ' + s.sex : ', 성별 필요'})`;
@@ -99,16 +150,25 @@ function chart(it, pts) {
   pts.forEach((p, i) => g.append(svg('circle', { cx: x(i), cy: y(p.value), r: 4.5, fill: 'var(--turf)' }, svg('title', {}, `${p.date} ${fmt(it.key, p.value)}${it.unit}`))));
   return g;
 }
+function summaryBox() {   // 7종목 종합 요약: 종목별 현재 등급 한 줄 + 강점·약점
+  const r = strengths(records, current), box = el('div', { class: 'card summary' });
+  if (!r) return el('p', { class: 'muted' }, '성별이 없어 등급 요약을 만들 수 없어요.');
+  box.append(el('div', { class: 'sum-line' }, ...ITEMS.map((it) => { const x = r.rows.find((q) => q.it.key === it.key); return el('div', { class: 'sum-cell' }, x ? badge(x.t.index, true) : el('span', { class: 'plus' }, '–'), el('span', {}, it.label)); })));
+  const names = (a) => a.map((q) => q.it.label).join(', ');
+  box.append(r.top.length ? el('p', {}, el('b', { class: 'good' }, '강점 '), `${names(r.top)} (${r.top[0].t.tier})  `, el('b', { class: 'weak' }, '약점 '), `${names(r.low)} (${r.low[0].t.tier})`) : el('p', { class: 'muted' }, r.rows.length < 2 ? '기록이 2종목 이상 모이면 강점·약점을 보여 드려요.' : '모든 종목의 등급이 같아요.'));
+  return box;
+}
 function renderCharts() {
   const box = $('charts'); box.replaceChildren();
-  const mine = records.filter((r) => r.id === current.id), key = gradeKey(current.grade, current.sex);
+  const mine = records.filter((r) => r.id === current.id);
+  const sm = $('s-summary'); sm.replaceChildren(summaryBox());
   for (const it of ITEMS) {
     const pts = bestOfDay(mine.filter((r) => r.item === it.key)).sort((a, b) => a.date.localeCompare(b.date));
-    const last = pts[pts.length - 1], tier = last && key ? tierFor(it.key, key, last.value) : null;
-    box.append(el('div', { class: 'card chart' },
-      el('div', { class: 'row' }, el('b', { class: 'grow' }, it.label), tier ? badge(tier.index, true) : ''),
-      pts.length ? chart(it, pts) : el('p', { class: 'muted' }, '기록 없음'),
-      el('div', { class: 'muted' }, last ? `${pts.length}회 · 최근 ${fmt(it.key, last.value)}${it.unit} (${last.date.slice(5)})` : '')));
+    const last = pts[pts.length - 1], tier = last && current.sex ? tierFor(it.key, gradeKey(current.grade, current.sex), last.value) : null;
+    const avg = current.sex ? groupAvg(roster, records, current, it.key) : null;
+    box.append(el('div', { class: 'card' },
+      el('div', { class: 'head' }, tier ? badge(tier.index, true) : '', el('div', {}, el('strong', {}, it.label), el('div', { class: 'muted' }, last ? `${tier ? tier.tier : '등급 준비 중'} · 최근 ${fmt(it.key, last.value)}${it.unit}` : '아직 기록이 없어요'))),
+      ...(pts.length ? [lineChart(it, pts, avg), recTable(it, pts, current, avg)] : [])));
   }
 }
 function renderStudent() {
@@ -219,6 +279,7 @@ const addSync = () => { const g = $('a-item').value === 'grip'; $('a-label2').hi
 $('a-item').addEventListener('change', addSync);
 $('add').addEventListener('submit', (ev) => { ev.preventDefault(); const g = $('a-item').value === 'grip'; run(() => api.teacherAdd(pin, { id: current.id, date: $('a-date').value, item: $('a-item').value, value: $('a-value').value, ...(g ? { left: $('a-value').value, right: $('a-value2').value } : {}) })).then(() => { $('a-value').value = ''; $('a-value2').value = ''; }); });
 $('f-grade').addEventListener('change', renderDash);
+$('f-date').addEventListener('change', () => { viewDate = $('f-date').value; renderDash(); });
 $('reload').addEventListener('click', async () => { try { await load(); renderDash(); } catch (e) { $('dash-error').textContent = e.message; } });
 $('logout').addEventListener('click', () => { pin = ''; roster = []; records = []; show(root, 'login'); });
 /* ── 학년 올리기: 교사용 비밀번호를 한 번 더 입력해야 실행, 실행 뒤에는 되돌리기 가능 ── */
@@ -262,6 +323,6 @@ $('open-guide').addEventListener('click', () => { renderGuide($('guide-box')); s
 $('guide-back').addEventListener('click', () => show(root, 'dash'));
 
 for (const sel of [$('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, sel.id === 'a-item' && it.mmss ? `${it.label} (초 단위로 입력)` : it.label));
-$('ver').textContent = 'v40';
+$('ver').textContent = 'v41';
 await loadTable();
 attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력
