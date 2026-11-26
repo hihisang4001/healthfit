@@ -262,6 +262,6 @@ $('open-guide').addEventListener('click', () => { renderGuide($('guide-box')); s
 $('guide-back').addEventListener('click', () => show(root, 'dash'));
 
 for (const sel of [$('a-item')]) for (const it of ITEMS) sel.append(el('option', { value: it.key }, sel.id === 'a-item' && it.mmss ? `${it.label} (초 단위로 입력)` : it.label));
-$('ver').textContent = 'v39';
+$('ver').textContent = 'v40';
 await loadTable();
 attachPinPad($('pin'));   // 비밀번호는 숫자 키패드 창으로 입력

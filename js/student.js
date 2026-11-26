@@ -3,7 +3,7 @@ import { makeStore, newCid } from './offline.js';
 import { DEV, ITEMS } from './config.js';
 import { clearAuto } from './autoprep.js';
 import { playTier, unlock, isMuted, setMuted } from './sound.js';
-import { tierFor, bestOfDay, gradeKey, isImplausible } from './tiers.js';
+import { tierFor, bestOfDay, gradeKey, isImplausible, TIERS } from './tiers.js';
 import { loadTable, el, badge, show, fmt } from './ui.js';
 import { LOWER, unitOf, keyLabel, dotEnabled, pressKey, parseEntry, needText, TWO_HAND, parseHands } from './entry.js';
 import { startScan, normalize } from './qr.js';
@@ -246,11 +246,22 @@ function chart(item, pts) {
   return svg;
 }
 function recordTable(it, pts) {
-  const rows = pts.map((r) => { const t = tierOf(r); return el('tr', {}, el('td', {}, r.date), el('td', {}, `${fmt(it.key, r.value)}${it.unit}`), el('td', {}, t ? el('span', { class: 'tcell' }, badge(t.index, true), t.tier) : '준비 중')); });
-  return el('table', { class: 'rtable' }, el('thead', {}, el('tr', {}, el('th', {}, '날짜'), el('th', {}, '측정값'), el('th', {}, '등급'))), el('tbody', {}, ...rows));
+  // 최고 기록 한 줄을 골라 연한 노란 배경으로 강조하고, 그 줄에 다음 등급까지 필요한 만큼을 적는다
+  const lower = LOWER.has(it.key);
+  let best = pts[0]; for (const r of pts) if (lower ? r.value < best.value : r.value > best.value) best = r;
+  const rows = pts.map((r) => {
+    const t = tierOf(r), isBest = r === best;
+    let need = '–';
+    if (isBest) need = !t ? '–' : t.next ? el('span', {}, el('b', {}, t.next.tier), ' 까지 ', el('b', {}, needText(it, t.next.needed)), ` ${lower ? '더 빨리' : '더'}`) : '가장 높은 등급!';
+    return el('tr', { class: isBest ? 'best' : '' }, el('td', {}, r.date), el('td', {}, `${fmt(it.key, r.value)}${it.unit}`, isBest ? el('span', { class: 'bestmark' }, ' 최고') : ''), el('td', {}, t ? el('span', { class: 'tcell' }, badge(t.index, true), t.tier) : '준비 중'), el('td', { class: 'need' }, need));
+  });
+  return el('table', { class: 'rtable' }, el('thead', {}, el('tr', {}, el('th', {}, '날짜'), el('th', {}, '측정값'), el('th', {}, '등급'), el('th', {}, '다음 등급까지'))), el('tbody', {}, ...rows));
+}
+function tierStrip() {   // 아이언 ~ 챌린저 등급 안내 띠(기준 숫자는 없음)
+  return el('div', { class: 'tier-strip', role: 'list', 'aria-label': '등급 안내' }, ...TIERS.map((n, i) => el('div', { class: 'ts', role: 'listitem' }, badge(i, true), el('span', {}, n))));
 }
 function renderMine() {
-  const box = $('mine'); box.replaceChildren();
+  const box = $('mine'); box.replaceChildren(tierStrip());
   const mine = bestOfDay(me.records.filter((r) => r.id === me.id)).sort((a, b) => a.date.localeCompare(b.date));
   for (const it of ITEMS) {
     const pts = mine.filter((r) => r.item === it.key), card = el('div', { class: 'card' });
@@ -312,7 +323,7 @@ setNet();
 if (DEV) { window.__login = login; window.__flush = flush; }
 
 // 새 버전이 올라오면 저절로 새로 고침한다 (태블릿에 옛 화면이 남아 있는 문제 방지)
-const BUILD = '39';
+const BUILD = '40';
 $('ver').textContent = 'v' + BUILD;
 fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((d) => {
   if (d && d.v && d.v !== BUILD && new URLSearchParams(location.search).get('v') !== d.v) location.replace(location.pathname + '?v=' + d.v);
